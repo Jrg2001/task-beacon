@@ -1,0 +1,2 @@
+{"type":"item.started","thread_id":"thread-1","item":{"type":"command_execution","command":"./gradlew test"}}
+{"type":"item.completed","thread_id":"thread-1","item":{"type":"file_change"}}

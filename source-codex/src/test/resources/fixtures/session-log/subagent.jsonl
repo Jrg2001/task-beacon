@@ -1,0 +1,3 @@
+{"type":"session_meta","payload":{"id":"session-agent","cwd":"/work/demo"}}
+{"type":"event_msg","payload":{"type":"subagent_start","turn_id":"turn-a","agent_id":"agent-a"}}
+{"type":"event_msg","payload":{"type":"subagent_stop","turn_id":"turn-a","agent_id":"agent-a"}}

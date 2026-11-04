@@ -1,0 +1,2 @@
+{"type":"response_item","payload":{"type":"custom_tool_call","name":"exec","session_id":"s1","turn_id":"t1"}}
+{"type":"event_msg","payload":{"type":"item_completed","session_id":"s1","turn_id":"t1","item":{"type":"file_change"}}}
