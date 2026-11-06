@@ -30,14 +30,15 @@ public final class ClaudeTranscriptParser {
                 return List.of(signal("turn_completed", at, session, agent, workspace, ""));
             }
             if (outer.equals("user")) {
-                if (!text(root, "interruptedMessageId", "").isBlank()) {
+                JsonNode content = root.path("message").path("content");
+                if (!text(root, "interruptedMessageId", "").isBlank()
+                        || firstText(content).startsWith("[Request interrupted by user")) {
                     return List.of(signal("turn_cancelled", at, session, agent, workspace, ""));
                 }
-                JsonNode content = root.path("message").path("content");
                 if (hasBlock(content, "tool_result")) {
                     return List.of(signal("tool_completed", at, session, agent, workspace, ""));
                 }
-                if (!root.path("isMeta").asBoolean(false)) {
+                if (!root.path("isMeta").asBoolean(false) && !isLocalCommand(firstText(content))) {
                     return List.of(signal("user_prompt", at, session, agent, workspace, ""));
                 }
                 return List.of();
@@ -63,6 +64,26 @@ public final class ClaudeTranscriptParser {
                                            String workspace, String tool) {
         return new ClaudeRawSignal(type, at, session, agent, workspace, tool,
                 ObservationMode.SESSION_LOG, EvidenceQuality.STRONG);
+    }
+
+    /** Slash commands such as /model and `!` shell commands run locally and never produce a turn_duration. */
+    private static boolean isLocalCommand(String text) {
+        String value = text.stripLeading();
+        for (String marker : LOCAL_COMMAND_MARKERS) if (value.startsWith(marker)) return true;
+        return false;
+    }
+
+    private static final List<String> LOCAL_COMMAND_MARKERS = List.of(
+            "<command-name>", "<command-message>", "<local-command-", "<bash-input>", "<bash-stdout>",
+            "<bash-stderr>");
+
+    private static String firstText(JsonNode content) {
+        if (content.isTextual()) return content.textValue();
+        if (!content.isArray()) return "";
+        for (JsonNode block : content) {
+            if (text(block, "type", "").equals("text")) return text(block, "text", "");
+        }
+        return "";
     }
 
     private static boolean hasBlock(JsonNode content, String type) {

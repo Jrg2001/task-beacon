@@ -61,6 +61,22 @@ class ClaudeTranscriptParserTest {
         assertEquals("user_prompt", nextPrompt.getFirst().signalType());
     }
 
+    @Test void localCommandsAreNotPromptsAndPlainInterruptCancels() {
+        assertTrue(parser.parse("""
+                {"type":"user","sessionId":"s2","message":{"content":"<command-name>/model</command-name>"}}
+                """, "hint", fallback).isEmpty());
+        assertTrue(parser.parse("""
+                {"type":"user","sessionId":"s2","message":{"content":"<local-command-stdout>ok</local-command-stdout>"}}
+                """, "hint", fallback).isEmpty());
+        assertTrue(parser.parse("""
+                {"type":"user","sessionId":"s2","message":{"content":"<bash-input>ls</bash-input>"}}
+                """, "hint", fallback).isEmpty());
+        var interrupted = parser.parse("""
+                {"type":"user","sessionId":"s2","message":{"content":[{"type":"text","text":"[Request interrupted by user for tool use]"}]}}
+                """, "hint", fallback);
+        assertEquals("turn_cancelled", interrupted.getFirst().signalType());
+    }
+
     @Test void ignoresMalformedAndUnknownRecords() {
         assertTrue(parser.parse("{broken", "s1", fallback).isEmpty());
         assertTrue(parser.parse("{\"type\":\"file-history-snapshot\"}", "s1", fallback).isEmpty());

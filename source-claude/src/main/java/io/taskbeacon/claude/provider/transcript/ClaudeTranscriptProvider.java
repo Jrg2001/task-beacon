@@ -22,12 +22,14 @@ public final class ClaudeTranscriptProvider implements AutoCloseable {
     private final Clock clock;
     private final long intervalMillis;
     private final Duration quietThreshold;
+    private final Duration openTurnQuietThreshold;
     private final ScheduledExecutorService executor;
     private final Map<Path, String> sessionIds = new ConcurrentHashMap<>();
     private final Map<Path, String> agentIds = new ConcurrentHashMap<>();
     private final Map<Path, String> workspaces = new ConcurrentHashMap<>();
     private final Map<Path, Instant> lastSemanticAt = new ConcurrentHashMap<>();
     private final Set<Path> terminal = ConcurrentHashMap.newKeySet();
+    private final Set<Path> openTurn = ConcurrentHashMap.newKeySet();
     private final Set<Path> quietEmitted = ConcurrentHashMap.newKeySet();
     private final Set<Path> initialized = ConcurrentHashMap.newKeySet();
     private final Map<Path, java.util.List<ClaudeRawSignal>> bootstrapSignals = new ConcurrentHashMap<>();
@@ -40,6 +42,7 @@ public final class ClaudeTranscriptProvider implements AutoCloseable {
         this.parser = new ClaudeTranscriptParser(mapper);
         this.intervalMillis = config.rescanInterval().toMillis();
         this.quietThreshold = config.quietThreshold();
+        this.openTurnQuietThreshold = config.openTurnQuietThreshold();
         this.executor = Executors.newSingleThreadScheduledExecutor(r -> {
             Thread thread = new Thread(r, "taskbeacon-claude-transcript");
             thread.setDaemon(true);
@@ -92,9 +95,17 @@ public final class ClaudeTranscriptProvider implements AutoCloseable {
         if (signal.workspace() != null && !signal.workspace().isBlank()) workspaces.put(path, signal.workspace());
         lastSemanticAt.put(path, signal.observedAt());
         quietEmitted.remove(path);
-        if (signal.signalType().equals("user_prompt")) terminal.remove(path);
-        if (signal.signalType().equals("turn_completed")
-                || signal.signalType().equals("turn_cancelled")) terminal.add(path);
+        String type = signal.signalType();
+        boolean mainSession = signal.agentId() == null || signal.agentId().isBlank();
+        if (type.equals("user_prompt")) {
+            terminal.remove(path);
+            // Subagent transcripts carry no turn_duration marker, so only main-session turns are tracked.
+            if (mainSession) openTurn.add(path);
+        }
+        if (type.equals("turn_completed") || type.equals("turn_cancelled")) {
+            terminal.add(path);
+            openTurn.remove(path);
+        }
     }
 
     private void emitQuietIfNeeded(Path path, Consumer<ClaudeRawSignal> sink) throws IOException {
@@ -104,7 +115,8 @@ public final class ClaudeTranscriptProvider implements AutoCloseable {
         if (cursor == null || cursor.offset() < Files.size(path) || last == null || session == null
                 || terminal.contains(path) || quietEmitted.contains(path)) return;
         Instant now = clock.instant();
-        if (Duration.between(last, now).compareTo(quietThreshold) < 0) return;
+        Duration threshold = openTurn.contains(path) ? openTurnQuietThreshold : quietThreshold;
+        if (Duration.between(last, now).compareTo(threshold) < 0) return;
         quietEmitted.add(path);
         sink.accept(new ClaudeRawSignal("session_quiet", now, session, agentIds.get(path),
                 workspaces.getOrDefault(path, ""), "", ObservationMode.FILE_WATCH, EvidenceQuality.HEURISTIC));
