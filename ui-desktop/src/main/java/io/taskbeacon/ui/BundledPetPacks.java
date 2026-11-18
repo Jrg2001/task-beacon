@@ -32,7 +32,8 @@ final class BundledPetPacks {
             new Pack("Dog-4-Schnauzer", "Schnauzer", "dogs", "Schnauzer-Idle.png"),
             new Pack("Dog-5-Saint-Bernard", "Saint Bernard", "dogs", "Saint-Bernard-Idle.png"),
             new Pack("Dog-6-Siberian-Husky", "Siberian Husky", "dogs", "Siberian-Husky-Idle.png"),
-            new Pack("Dog-7-Sprite", "Border Collie", "dogs", "Border-Collie-Idle-f10.png")
+            // Id kept for saved preferences; artwork is the CC0 Husky set recoloured to match the pack style.
+            new Pack("Dog-7-Sprite", "Border Collie", "dogs", "Border-Collie-Idle.png")
     );
     static final List<Pack> CATS = List.of(
             new Pack("Cat-1", "Orange", "cats", "Cat-1-Idle.png"),
@@ -58,6 +59,7 @@ final class BundledPetPacks {
 
         Path target = skinsDirectory.resolve("bundled").resolve(pack.category()).resolve(pack.id());
         Files.createDirectories(target);
+        clearPreviousInstall(target);
         if (idleResource.getProtocol().equals("jar")) {
             copyFromJar(idleResource, prefix, target);
         } else if (idleResource.getProtocol().equals("file")) {
@@ -68,6 +70,16 @@ final class BundledPetPacks {
         Path idle = target.resolve(pack.idleFile());
         if (!Files.isRegularFile(idle)) throw new IOException("Bundled pet idle image missing: " + pack.id());
         return idle;
+    }
+
+    /**
+     * Sprite states are matched by file-name keywords, so files left over from an older version of a pack
+     * (e.g. renamed artwork) could shadow the new ones. The target directory is owned by TaskBeacon.
+     */
+    private static void clearPreviousInstall(Path target) throws IOException {
+        try (Stream<Path> files = Files.list(target)) {
+            for (Path file : files.filter(Files::isRegularFile).toList()) Files.delete(file);
+        }
     }
 
     private static void copyFromJar(URL resource, String prefix, Path target) throws IOException {

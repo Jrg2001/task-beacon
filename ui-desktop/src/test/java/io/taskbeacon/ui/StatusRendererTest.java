@@ -212,29 +212,34 @@ class StatusRendererTest {
     }
 
     @Test
-    void borderCollieUsesDeclaredTenFrameIdleAnimation(@TempDir Path skins) throws Exception {
+    void borderCollieUsesSameSpriteLayoutAsOtherDogs(@TempDir Path skins) throws Exception {
+        Path stale = Files.createDirectories(skins.resolve("bundled/dogs/Dog-7-Sprite"))
+                .resolve("Border-Collie-Run-f8.png");
+        Files.writeString(stale, "old artwork");
         Path idle = BundledPetPacks.install(
                 BundledPetPacks.find("Dog-7-Sprite").orElseThrow(), skins);
+        assertFalse(Files.exists(stale), "files from an older pack version must not shadow new sprites");
         CountDownLatch latch = new CountDownLatch(1);
         Platform.runLater(() -> {
             try {
                 PetAnimationController controller = new PetAnimationController();
                 assertTrue(controller.setCustomImage(idle.toFile()));
-                assertEquals("Border-Collie-Idle-f10.png", controller.currentCustomFileName());
+                assertEquals("Border-Collie-Idle.png", controller.currentCustomFileName());
                 assertEquals(10, controller.currentSpriteFrameCount());
-                assertEquals(10, controller.currentSpriteViewportCount());
                 controller.playManualAction(PetAnimationController.ManualAction.BARK);
-                assertEquals("Border-Collie-Bark-f2.png", controller.currentCustomFileName());
-                assertEquals(2, controller.currentSpriteViewportCount());
+                assertEquals("Border-Collie-bark.png", controller.currentCustomFileName());
+                assertEquals(3, controller.currentSpriteFrameCount());
                 controller.playManualAction(PetAnimationController.ManualAction.LICK);
-                assertEquals("Border-Collie-Licking1-f4.png", controller.currentCustomFileName());
-                assertEquals(4, controller.currentSpriteViewportCount());
+                assertEquals("Border-Collie-licking1.png", controller.currentCustomFileName());
                 controller.playManualAction(PetAnimationController.ManualAction.STRETCH);
-                assertEquals("Border-Collie-Stretching-f10.png", controller.currentCustomFileName());
-                assertEquals(10, controller.currentSpriteViewportCount());
+                assertEquals("Border-Collie-stretching.png", controller.currentCustomFileName());
                 controller.playManualAction(PetAnimationController.ManualAction.RUN);
-                assertEquals("Border-Collie-Run-f8.png", controller.currentCustomFileName());
-                assertEquals(8, controller.currentSpriteViewportCount());
+                assertEquals("Border-Collie-run.png", controller.currentCustomFileName());
+                assertEquals(8, controller.currentSpriteFrameCount());
+                controller.playManualAction(PetAnimationController.ManualAction.WALK);
+                assertEquals("Border-Collie-walk.png", controller.currentCustomFileName());
+                controller.playManualAction(PetAnimationController.ManualAction.ITCH);
+                assertEquals("Border-Collie-itching.png", controller.currentCustomFileName());
             } finally {
                 latch.countDown();
             }
