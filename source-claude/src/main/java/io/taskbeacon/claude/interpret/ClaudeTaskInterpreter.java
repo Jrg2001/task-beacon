@@ -2,6 +2,7 @@ package io.taskbeacon.claude.interpret;
 
 import io.taskbeacon.claude.signal.ClaudeRawSignal;
 import io.taskbeacon.core.model.*;
+import io.taskbeacon.core.stall.DefaultStallDetector;
 
 import java.nio.file.Path;
 import java.util.*;
@@ -10,6 +11,8 @@ public final class ClaudeTaskInterpreter {
     private final Map<String, RunCursor> runs = new HashMap<>();
     private final Set<String> activeAgents = new HashSet<>();
     private final Map<String, String> sessionWorkspaces = new HashMap<>();
+    /** Tool calls started but not yet answered, per task; parallel calls each count. */
+    private final Map<TaskKey, Integer> pendingTools = new HashMap<>();
     private record RunCursor(int generation, boolean active) { }
 
     public synchronized List<TaskEvent> interpret(ClaudeRawSignal signal) {
@@ -70,6 +73,14 @@ public final class ClaudeTaskInterpreter {
             }
         } else {
             eventType = EventType.TASK_HEARTBEAT; impact = ProgressImpact.OBSERVATION_ONLY;
+        }
+        int pending = pendingTools.getOrDefault(key, 0);
+        if (type.equals("tool_started")) pending++;
+        else if (type.equals("tool_completed")) pending = Math.max(0, pending - 1);
+        else if (type.equals("user_prompt") || terminal) pending = 0;
+        if (pending == 0) pendingTools.remove(key); else pendingTools.put(key, pending);
+        if (!type.equals("session_quiet")) {
+            data.put("attributes", Map.of(DefaultStallDetector.TOOL_IN_FLIGHT_ATTRIBUTE, pending > 0));
         }
         TaskEvent event = TaskEvent.of(key, relation, eventType, signal.observedAt(), signal.observationMode(),
                 signal.evidenceQuality(), impact, projectName(workspace), message, data);

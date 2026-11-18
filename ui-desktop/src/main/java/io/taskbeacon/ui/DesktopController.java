@@ -199,6 +199,15 @@ public final class DesktopController implements AutoCloseable {
     }
 
     private void refresh() {
+        try {
+            refreshUnsafe();
+        } catch (RuntimeException error) {
+            // A failure here would freeze every pet in its last pose, so make it visible in the log.
+            org.slf4j.LoggerFactory.getLogger(DesktopController.class).warn("UI refresh failed", error);
+        }
+    }
+
+    private void refreshUnsafe() {
         List<TaskState> tasks = registry.recentTasks();
         List<TaskState> activeTasks = registry.activeTasks();
         int active = activeTasks.size();

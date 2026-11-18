@@ -117,6 +117,25 @@ class ClaudeTaskInterpreterTest {
         assertEquals(Condition.NORMAL, registry.get(childKey).orElseThrow().condition());
     }
 
+    @Test void longRunningToolIsNotReportedStalledUntilToolThreshold() {
+        ClaudeTaskInterpreter interpreter = new ClaudeTaskInterpreter();
+        DefaultTaskRegistry registry = new DefaultTaskRegistry(new DefaultTaskStateReducer(),
+                Clock.fixed(now, ZoneOffset.UTC), Duration.ofHours(1));
+        DefaultStallDetector detector = new DefaultStallDetector(Duration.ofMinutes(5), Duration.ofMinutes(20));
+        interpreter.interpret(signal("user_prompt", "", 0)).forEach(registry::accept);
+        // Two parallel tool calls; only one answered, so a tool is still running.
+        interpreter.interpret(signal("tool_started", "Bash", 1)).forEach(registry::accept);
+        interpreter.interpret(signal("tool_started", "Bash", 1)).forEach(registry::accept);
+        interpreter.interpret(signal("tool_completed", "", 2)).forEach(registry::accept);
+        TaskState running = registry.activeTasks().getFirst();
+        assertTrue(detector.evaluate(running, now.plus(Duration.ofMinutes(10))).isEmpty());
+        assertTrue(detector.evaluate(running, now.plus(Duration.ofMinutes(21))).isPresent());
+
+        interpreter.interpret(signal("tool_completed", "", 3)).forEach(registry::accept);
+        TaskState idleBetweenTools = registry.activeTasks().getFirst();
+        assertTrue(detector.evaluate(idleBetweenTools, now.plus(Duration.ofMinutes(6))).isPresent());
+    }
+
     private static Activity activity(java.util.List<TaskEvent> events) {
         return (Activity) events.getFirst().data().get("activity");
     }

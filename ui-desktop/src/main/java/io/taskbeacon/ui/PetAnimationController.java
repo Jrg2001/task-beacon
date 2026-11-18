@@ -26,6 +26,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public final class PetAnimationController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(PetAnimationController.class);
     public static final double PET_WIDTH = 96;
     public static final double PET_HEIGHT = 96;
     private static final Pattern DECLARED_FRAME_COUNT = Pattern.compile(
@@ -61,6 +62,9 @@ public final class PetAnimationController {
     private Rectangle2D customPackCrop;
     private boolean pixelSpritePack;
     private String currentCustomMode = "";
+    private String logName = "pet";
+
+    public void setLogName(String logName) { this.logName = logName; }
     private final PauseTransition customIdleTimer = new PauseTransition(Duration.seconds(30));
 
     // Body parts
@@ -805,6 +809,8 @@ public final class PetAnimationController {
 
     private void switchCustomState(String state, boolean restart) {
         if (!hasCustomImage || (!restart && state.equals(currentCustomMode))) return;
+        log.info("Pet {} sprite {} -> {}{}", logName, currentCustomMode.isEmpty() ? "<none>" : currentCustomMode, state,
+                restart ? " (manual)" : "");
         currentCustomMode = state;
         customIdleTimer.stop();
         File target = customStateFiles.getOrDefault(state, customStateFiles.get("idle"));
@@ -815,6 +821,7 @@ public final class PetAnimationController {
         if (state.equals("idle")) {
             customIdleTimer.setOnFinished(event -> {
                 if (!"idle".equals(currentCustomMode)) return;
+                log.info("Pet {} idle for 30s, lying down", logName);
                 File lying = customStateFiles.get("lying");
                 if (lying != null) {
                     currentlyLoadedCustomFile = lying;

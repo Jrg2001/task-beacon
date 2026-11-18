@@ -460,6 +460,14 @@ public final class PetRenderer implements StatusRenderer {
     }
 
     private void updatePet(PetSlot pet, TaskCardViewModel model) {
+        String summary = model == null ? "<none> (idle)"
+                : "status=" + model.status() + " badge=" + model.badge() + " active=" + model.activeTaskCount()
+                + " title=" + model.title();
+        if (!summary.equals(pet.lastLoggedSummary)) {
+            // Diagnostic trail for "pet looks idle while the tool is running" reports.
+            log.info("Pet {} <- {}{}", pet.id, summary, pet.manualActionActive ? " (manual action active)" : "");
+            pet.lastLoggedSummary = summary;
+        }
         pet.latestModel = model;
         if (!pet.manualActionActive) pet.controller.applyState(model);
     }
@@ -482,11 +490,13 @@ public final class PetRenderer implements StatusRenderer {
         private double scale = 1.0;
         private String packId;
         private TaskCardViewModel latestModel;
+        private String lastLoggedSummary;
         private boolean manualActionActive;
 
         private PetSlot(String id, String displayName) {
             this.id = id;
             this.displayName = displayName;
+            controller.setLogName(id);
         }
     }
 }

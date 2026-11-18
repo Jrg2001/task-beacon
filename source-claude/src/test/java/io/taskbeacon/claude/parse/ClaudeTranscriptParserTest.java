@@ -61,6 +61,14 @@ class ClaudeTranscriptParserTest {
         assertEquals("user_prompt", nextPrompt.getFirst().signalType());
     }
 
+    @Test void emitsOneCompletionPerParallelToolResult() {
+        var results = parser.parse("""
+                {"type":"user","sessionId":"s2","message":{"content":[{"type":"tool_result"},{"type":"tool_result"}]}}
+                """, "hint", fallback);
+        assertEquals(2, results.size());
+        assertTrue(results.stream().allMatch(signal -> signal.signalType().equals("tool_completed")));
+    }
+
     @Test void localCommandsAreNotPromptsAndPlainInterruptCancels() {
         assertTrue(parser.parse("""
                 {"type":"user","sessionId":"s2","message":{"content":"<command-name>/model</command-name>"}}

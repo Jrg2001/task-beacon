@@ -35,8 +35,10 @@ public final class ClaudeTranscriptParser {
                         || firstText(content).startsWith("[Request interrupted by user")) {
                     return List.of(signal("turn_cancelled", at, session, agent, workspace, ""));
                 }
-                if (hasBlock(content, "tool_result")) {
-                    return List.of(signal("tool_completed", at, session, agent, workspace, ""));
+                int results = countBlocks(content, "tool_result");
+                if (results > 0) {
+                    // One signal per result so parallel tool calls are balanced against their tool_use blocks.
+                    return Collections.nCopies(results, signal("tool_completed", at, session, agent, workspace, ""));
                 }
                 if (!root.path("isMeta").asBoolean(false) && !isLocalCommand(firstText(content))) {
                     return List.of(signal("user_prompt", at, session, agent, workspace, ""));
@@ -86,10 +88,11 @@ public final class ClaudeTranscriptParser {
         return "";
     }
 
-    private static boolean hasBlock(JsonNode content, String type) {
-        if (!content.isArray()) return false;
-        for (JsonNode block : content) if (text(block, "type", "").equals(type)) return true;
-        return false;
+    private static int countBlocks(JsonNode content, String type) {
+        if (!content.isArray()) return 0;
+        int count = 0;
+        for (JsonNode block : content) if (text(block, "type", "").equals(type)) count++;
+        return count;
     }
 
     private static String text(JsonNode node, String field, String fallback) {
