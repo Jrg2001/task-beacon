@@ -8,7 +8,7 @@ from PIL import Image
 PETS = 'ui-desktop/src/main/resources/pets'
 OUT = 'docs/images'
 SCALE = 4        # pet lineup
-STATE_SCALE = 6  # per-state Akita animations
+STATE_SCALE = 4  # per-state Akita animations; 4 columns must fit GitHub's ~880px README width
 BG = (63, 90, 122, 255)          # readable on both light and dark GitHub themes
 
 def frames(path, size):
