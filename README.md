@@ -50,7 +50,7 @@ Linux/macOS：
 
 宠物模式中的 Codex 和 Claude Code 各有独立宠物；未选择其他图片时，两者默认使用 Dog-2-Akita。右键任一宠物可从“内置宠物”菜单中分别选择 7 种狗（含 Border Collie）或 6 种猫，也可继续选择自定义图片。重置默认会恢复该宠物为 Akita；已有的自定义选择会保留，直到用户主动更换或重置。
 
-原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 由同一 CC0 狗素材包中的 Siberian Husky 重新配色而成，因此画风、尺寸和动作与其他狗保持一致。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
+原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 基于同一 CC0 狗素材包中的 Siberian Husky 重新配色，并修改了耳尖、白色领圈和尾巴，因此画风、尺寸和动作与其他狗保持一致；生成脚本见 `tools/pets/make_border_collie.py`。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
 
 ## 当前限制
 
