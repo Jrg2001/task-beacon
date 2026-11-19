@@ -2,6 +2,29 @@
 
 TaskBeacon 是一个 local-first 的桌面任务状态监视器。它把来源不同、可信度不同的任务观测信号归一化为统一状态，并通过始终置顶的小卡片、任务面板和系统托盘展示。当前实现支持 Demo 场景，以及对外部 Terminal 中 Codex rollout/session JSONL 和 Claude Code transcript JSONL 的被动增量观察。
 
+## 效果展示
+
+Codex 和 Claude Code 各有一只桌面宠物，宠物的动作实时反映对应工具的任务状态。内置 7 种狗和 6 种猫，右键宠物即可切换：
+
+<p align="center"><img src="docs/images/pets-lineup.gif" alt="内置宠物：7 种狗和 6 种猫" width="100%"></p>
+
+以默认的秋田犬为例，不同任务状态下的动作：
+
+<table>
+  <tr>
+    <td align="center" width="25%"><img src="docs/images/akita-thinking.gif" alt="思考中" width="204"><br><b>思考中</b><br><sub>模型正在推理或生成回复</sub></td>
+    <td align="center" width="25%"><img src="docs/images/akita-working.gif" alt="使用工具" width="204"><br><b>使用工具</b><br><sub>读写文件、搜索、调用工具</sub></td>
+    <td align="center" width="25%"><img src="docs/images/akita-running.gif" alt="执行命令" width="204"><br><b>执行命令</b><br><sub>运行命令、测试或构建</sub></td>
+    <td align="center" width="25%"><img src="docs/images/akita-completed.gif" alt="完成" width="204"><br><b>完成</b><br><sub>一轮任务成功结束</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="25%"><img src="docs/images/akita-attention.gif" alt="需要注意" width="204"><br><b>需要注意</b><br><sub>失败、等待审批或等待输入</sub></td>
+    <td align="center" width="25%"><img src="docs/images/akita-stalled.gif" alt="可能卡住" width="204"><br><b>可能卡住</b><br><sub>长时间没有任何进展</sub></td>
+    <td align="center" width="25%"><img src="docs/images/akita-idle.gif" alt="空闲" width="204"><br><b>空闲</b><br><sub>空闲 30 秒后趴下，随后入睡</sub></td>
+    <td></td>
+  </tr>
+</table>
+
 ## 环境与构建
 
 - JDK 21
@@ -50,7 +73,7 @@ Linux/macOS：
 
 宠物模式中的 Codex 和 Claude Code 各有独立宠物；未选择其他图片时，两者默认使用 Dog-2-Akita。右键任一宠物可从“内置宠物”菜单中分别选择 7 种狗（含 Border Collie）或 6 种猫，也可继续选择自定义图片。重置默认会恢复该宠物为 Akita；已有的自定义选择会保留，直到用户主动更换或重置。
 
-原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 基于同一 CC0 狗素材包中的 Siberian Husky 重新配色，并修改了耳尖、白色领圈和尾巴，因此画风、尺寸和动作与其他狗保持一致；生成脚本见 `tools/pets/make_border_collie.py`。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
+原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 基于同一 CC0 狗素材包中的 Siberian Husky 重新配色，并修改了耳尖、白色领圈和尾巴，因此画风、尺寸和动作与其他狗保持一致；生成脚本见 `tools/pets/make_border_collie.py`。README 中的宠物展示动图由 `tools/readme/make_readme_media.py` 根据内置素材生成，素材更新后在仓库根目录重新运行即可。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
 
 ## 当前限制
 
