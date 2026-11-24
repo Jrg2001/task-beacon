@@ -113,7 +113,7 @@ public final class PetRenderer implements StatusRenderer {
     private boolean loadPack(PetSlot pet, BundledPetPacks.Pack pack) {
         try {
             Path idleImage = BundledPetPacks.install(pack, resolveSkinsDir());
-            if (!pet.controller.setCustomImage(idleImage.toFile())) return false;
+            if (!pet.controller.setCustomImage(idleImage.toFile(), pack.sizeFactor())) return false;
             pet.packId = pack.id();
             return true;
         } catch (Exception error) {
@@ -300,7 +300,7 @@ public final class PetRenderer implements StatusRenderer {
                           ToggleGroup group) {
         Menu menu = new Menu(title);
         for (BundledPetPacks.Pack pack : packs) {
-            RadioMenuItem item = new RadioMenuItem(pack.label());
+            RadioMenuItem item = new RadioMenuItem(pack.menuLabel());
             item.setToggleGroup(group);
             item.setSelected(pack.id().equals(pet.packId));
             item.setOnAction(event -> selectPack(pet, pack));

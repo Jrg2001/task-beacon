@@ -57,8 +57,14 @@ def akita_states():
                     tiles.append(render(im, box, canvas, STATE_SCALE)); durations.append(ms)
         save_gif(tiles, durations, f'akita-{state}.gif')
 
+# Mirrors BundledPetPacks.Pack#sizeFactor.
+PACK_SIZE_FACTORS = {'Dog-4-Schnauzer': 0.75}
+
 def app_size_factor(pack_dir):
     """Mirrors PetAnimationController.packPixelScale: sprites taller than the Akita's crop are shown smaller."""
+    return _crop_factor(pack_dir) * PACK_SIZE_FACTORS.get(os.path.basename(pack_dir), 1.0)
+
+def _crop_factor(pack_dir):
     boxes = []
     for f in os.listdir(pack_dir):
         if f.endswith('.png'):

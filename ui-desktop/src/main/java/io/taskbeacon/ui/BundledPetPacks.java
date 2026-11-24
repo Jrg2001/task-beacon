@@ -19,30 +19,46 @@ import java.util.stream.Stream;
 final class BundledPetPacks {
     static final String DEFAULT_ID = "Dog-2-Akita";
 
-    record Pack(String id, String label, String category, String idleFile) {
+    /**
+     * {@code label} is the English name; {@code chineseLabel} follows it in the menu. {@code sizeFactor} scales
+     * the pet's 100% size for breeds the artwork draws too big (tools/readme/make_readme_media.py mirrors it).
+     */
+    record Pack(String id, String label, String chineseLabel, String category, String idleFile, double sizeFactor) {
+        Pack(String id, String label, String chineseLabel, String category, String idleFile) {
+            this(id, label, chineseLabel, category, idleFile, 1.0);
+        }
+
+        String menuLabel() {
+            return label + " / " + chineseLabel;
+        }
+
         String resourceDirectory() {
             return "pets/" + category + "/" + id + "/";
         }
     }
 
     static final List<Pack> DOGS = List.of(
-            new Pack("Dog-1-Golden-Retriever", "Golden Retriever", "dogs", "Golden-Retriever-idle.png"),
-            new Pack(DEFAULT_ID, "Akita", "dogs", "Akita-Idle.png"),
+            new Pack("Dog-1-Golden-Retriever", "Golden Retriever", "\u91d1\u6bdb", "dogs", "Golden-Retriever-idle.png"),
+            new Pack(DEFAULT_ID, "Akita", "\u79cb\u7530\u72ac", "dogs", "Akita-Idle.png"),
             // Id kept for saved preferences; artwork is the CC0 Great Dane set recoloured as a Weimaraner.
-            new Pack("Dog-3-Great-Dane", "Weimaraner", "dogs", "Weimaraner-idle.png"),
-            new Pack("Dog-4-Schnauzer", "Schnauzer", "dogs", "Schnauzer-Idle.png"),
-            new Pack("Dog-5-Saint-Bernard", "Saint Bernard", "dogs", "Saint-Bernard-Idle.png"),
-            new Pack("Dog-6-Siberian-Husky", "Siberian Husky", "dogs", "Siberian-Husky-Idle.png"),
+            new Pack("Dog-3-Great-Dane", "Weimaraner", "\u9b4f\u739b\u72ac", "dogs", "Weimaraner-idle.png"),
+            new Pack("Dog-4-Schnauzer", "Schnauzer", "\u96ea\u7eb3\u745e", "dogs", "Schnauzer-Idle.png",
+                    0.75),   // a small breed; the artwork draws it taller than the Akita
+            new Pack("Dog-5-Saint-Bernard", "Saint Bernard", "\u5723\u4f2f\u7eb3", "dogs", "Saint-Bernard-Idle.png"),
+            new Pack("Dog-6-Siberian-Husky", "Siberian Husky", "\u54c8\u58eb\u5947", "dogs", "Siberian-Husky-Idle.png"),
             // Id kept for saved preferences; artwork is the CC0 Husky set recoloured to match the pack style.
-            new Pack("Dog-7-Sprite", "Border Collie", "dogs", "Border-Collie-Idle.png")
+            new Pack("Dog-7-Sprite", "Border Collie", "\u8fb9\u5883\u7267\u7f8a\u72ac", "dogs", "Border-Collie-Idle.png")
     );
     static final List<Pack> CATS = List.of(
-            new Pack("Cat-1", "Orange", "cats", "Cat-1-Idle.png"),
-            new Pack("Cat-2", "Black", "cats", "Cat-2-Idle.png"),
-            new Pack("Cat-3", "Siamese", "cats", "Cat-3-Idle.png"),
-            new Pack("Cat-4", "Brown", "cats", "Cat-4-Idle.png"),
-            new Pack("Cat-5", "Silver Longhair", "cats", "Cat-5-Idle.png"),
-            new Pack("Cat-6", "Silver Tabby", "cats", "Cat-6-Idle.png")
+            new Pack("Cat-1", "Orange", "\u6a58\u732b", "cats", "Cat-1-Idle.png"),
+            new Pack("Cat-2", "Black", "\u9ed1\u732b", "cats", "Cat-2-Idle.png"),
+            new Pack("Cat-3", "Siamese", "\u66b9\u7f57\u732b", "cats", "Cat-3-Idle.png"),
+            // Id kept for saved preferences; artwork is the CC0 grey-and-beige cat recoloured as a golden tiger cub.
+            new Pack("Cat-4", "Tiger", "\u5c0f\u8001\u864e", "cats", "Cat-4-Idle.png"),
+            // Id kept for saved preferences; artwork is the CC0 silver longhair recoloured as a Ragdoll.
+            new Pack("Cat-5", "Ragdoll", "\u5e03\u5076\u732b", "cats", "Cat-5-Idle.png"),
+            // Id kept for saved preferences; artwork is the CC0 silver tabby recoloured as an American Shorthair.
+            new Pack("Cat-6", "American Shorthair", "\u7f8e\u56fd\u77ed\u6bdb\u732b", "cats", "Cat-6-Idle.png")
     );
 
     private BundledPetPacks() { }

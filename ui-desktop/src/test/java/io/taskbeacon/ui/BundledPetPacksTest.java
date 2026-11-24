@@ -43,9 +43,18 @@ class BundledPetPacksTest {
         assertNotNull(BundledPetPacks.class.getResource("/pets/dogs/Preview.png"));
     }
 
+    @Test void everyPackHasAChineseMenuName() {
+        for (BundledPetPacks.Pack pack : java.util.stream.Stream.concat(
+                BundledPetPacks.DOGS.stream(), BundledPetPacks.CATS.stream()).toList()) {
+            assertFalse(pack.chineseLabel().isBlank(), pack.id());
+            assertEquals(pack.label() + " / " + pack.chineseLabel(), pack.menuLabel());
+        }
+        assertEquals("Akita / \u79cb\u7530\u72ac", BundledPetPacks.find(BundledPetPacks.DEFAULT_ID).orElseThrow().menuLabel());
+    }
+
     @Test void catLabelsMatchTheOriginalSpritesWithoutChangingSavedIds() {
-        assertEquals(java.util.List.of("Orange", "Black", "Siamese", "Brown",
-                        "Silver Longhair", "Silver Tabby"),
+        assertEquals(java.util.List.of("Orange", "Black", "Siamese", "Tiger",
+                        "Ragdoll", "American Shorthair"),
                 BundledPetPacks.CATS.stream().map(BundledPetPacks.Pack::label).toList());
         assertEquals(java.util.List.of("Cat-1", "Cat-2", "Cat-3", "Cat-4", "Cat-5", "Cat-6"),
                 BundledPetPacks.CATS.stream().map(BundledPetPacks.Pack::id).toList());

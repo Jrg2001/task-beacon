@@ -446,9 +446,12 @@ public final class PetAnimationController {
      * useful. E.g. Akita (crop 22) 3x, Border Collie / Husky / Golden (34) 2.4x, Weimaraner (48) 2.0x.
      */
     private double packPixelScale() {
-        if (customPackCrop == null || customPackCrop.getHeight() <= REFERENCE_CROP_HEIGHT) return 3.0;
-        return 3.0 * Math.sqrt(REFERENCE_CROP_HEIGHT / customPackCrop.getHeight());
+        if (customPackCrop == null || customPackCrop.getHeight() <= REFERENCE_CROP_HEIGHT) return 3.0 * packSizeFactor;
+        return 3.0 * Math.sqrt(REFERENCE_CROP_HEIGHT / customPackCrop.getHeight()) * packSizeFactor;
     }
+
+    /** Per-pack correction on top of packPixelScale (see BundledPetPacks.Pack#sizeFactor); 1 for custom images. */
+    private double packSizeFactor = 1.0;
 
     /** Crop height of the Akita, the default pet, whose 100% size is the reference. */
     private static final double REFERENCE_CROP_HEIGHT = 22;
@@ -473,6 +476,11 @@ public final class PetAnimationController {
     }
 
     public boolean setCustomImage(File file) {
+        return setCustomImage(file, 1.0);
+    }
+
+    public boolean setCustomImage(File file, double sizeFactor) {
+        this.packSizeFactor = sizeFactor > 0 ? sizeFactor : 1.0;
         if (file == null || !file.exists() || !file.isFile()) {
             clearCustomImage();
             return false;
