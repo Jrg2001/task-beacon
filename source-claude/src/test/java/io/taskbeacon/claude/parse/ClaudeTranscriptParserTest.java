@@ -85,6 +85,12 @@ class ClaudeTranscriptParserTest {
         assertEquals("turn_cancelled", interrupted.getFirst().signalType());
     }
 
+    @Test void compactSummaryIsNotAPrompt() {
+        assertTrue(parser.parse("""
+                {"type":"user","sessionId":"s2","isCompactSummary":true,"isVisibleInTranscriptOnly":true,"message":{"content":"This session is being continued from a previous conversation."}}
+                """, "hint", fallback).isEmpty());
+    }
+
     @Test void ignoresMalformedAndUnknownRecords() {
         assertTrue(parser.parse("{broken", "s1", fallback).isEmpty());
         assertTrue(parser.parse("{\"type\":\"file-history-snapshot\"}", "s1", fallback).isEmpty());

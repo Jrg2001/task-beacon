@@ -40,7 +40,11 @@ public final class ClaudeTranscriptParser {
                     // One signal per result so parallel tool calls are balanced against their tool_use blocks.
                     return Collections.nCopies(results, signal("tool_completed", at, session, agent, workspace, ""));
                 }
-                if (!root.path("isMeta").asBoolean(false) && !isLocalCommand(firstText(content))) {
+                // A /compact summary is written as a user entry but is not a prompt: no turn follows it, so
+                // treating it as one left a run open until the next real prompt (with a stale start time).
+                if (!root.path("isMeta").asBoolean(false) && !root.path("isCompactSummary").asBoolean(false)
+                        && !root.path("isVisibleInTranscriptOnly").asBoolean(false)
+                        && !isLocalCommand(firstText(content))) {
                     return List.of(signal("user_prompt", at, session, agent, workspace, ""));
                 }
                 return List.of();
