@@ -28,6 +28,20 @@ class DefaultPrimaryTaskSelectorTest {
         assertEquals("approval", selected.key().taskId());
     }
 
+    @Test void rankListsEveryVisibleTaskMostImportantFirst() {
+        TaskState running = state("running", EventType.TASK_STARTED, now.minusSeconds(2), Map.of());
+        TaskState approval = reducer.reduce(state("approval", EventType.TASK_STARTED, now.minusSeconds(8), Map.of()),
+                event("approval", EventType.ATTENTION_REQUIRED, now.minusSeconds(3),
+                        Map.of("attention", Attention.APPROVAL_REQUIRED)));
+        TaskState quiet = reducer.reduce(state("quiet", EventType.TASK_STARTED, now.minusSeconds(20), Map.of()),
+                event("quiet", EventType.CONDITION_CHANGED, now.minusSeconds(5), Map.of("condition", Condition.QUIET)));
+        SelectionContext context = new SelectionContext(now, Duration.ofSeconds(8), null);
+        DefaultPrimaryTaskSelector selector = new DefaultPrimaryTaskSelector();
+        List<TaskState> ranked = selector.rank(List.of(running, quiet, approval), context);
+        assertEquals(List.of("approval", "running"), ranked.stream().map(state -> state.key().taskId()).toList());
+        assertEquals(selector.select(List.of(running, quiet, approval), context).orElseThrow(), ranked.getFirst());
+    }
+
     @Test void quietRunningTaskDoesNotOccupyPrimaryCard() {
         TaskState running = state("quiet", EventType.TASK_STARTED, now.minusSeconds(20), Map.of());
         TaskState quiet = reducer.reduce(running, event("quiet", EventType.CONDITION_CHANGED,

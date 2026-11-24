@@ -7,7 +7,12 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.*;
+import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
 import javafx.stage.FileChooser;
+import javafx.stage.Popup;
+import javafx.stage.PopupWindow;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -16,12 +21,31 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.prefs.Preferences;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public final class PetRenderer implements StatusRenderer {
     public static final double PET_WIDTH = 140;
+    private static final double POPOVER_WIDTH = 270;
+    /** Gap between the pet's head and the popover. */
+    private static final double POPOVER_GAP = 4;
+
+    /**
+     * What one pet should show.
+     *
+     * @param model      the task shown by the pet, or null when idle
+     * @param borrowed   the pet is lent to the other tool and shows one of its tasks
+     * @param listSource display name of the tool whose tasks the popover lists
+     * @param tasks      all tasks of that tool, with subagent lines, for the popover
+     */
+    record PetDisplay(TaskCardViewModel model, boolean borrowed, String listSource, List<TaskListItem> tasks) {
+        public PetDisplay {
+            tasks = tasks == null ? List.of() : List.copyOf(tasks);
+        }
+    }
     private static final double DEFAULT_PET_SCALE = 1.0;
     private static final Logger log = LoggerFactory.getLogger(PetRenderer.class);
 
@@ -136,15 +160,15 @@ public final class PetRenderer implements StatusRenderer {
     }
 
     private void buildLayout() {
-        configureRoot(root, codexPet.controller.node());
-        configureRoot(secondaryRoot, claudePet.controller.node());
+        configureRoot(root, codexPet);
+        configureRoot(secondaryRoot, claudePet);
     }
 
-    private void configureRoot(VBox petRoot, Node petNode) {
+    private void configureRoot(VBox petRoot, PetSlot pet) {
         petRoot.setAlignment(Pos.BOTTOM_CENTER);
         petRoot.setPadding(new Insets(2, 4, 2, 4));
         petRoot.setStyle("-fx-background-color: transparent;");
-        petRoot.getChildren().add(petNode);
+        petRoot.getChildren().add(pet.controller.node());
     }
 
     private void resizeRoot(VBox petRoot, double width) {
@@ -161,12 +185,27 @@ public final class PetRenderer implements StatusRenderer {
 
     private void setupPetInteraction(PetSlot pet) {
         Node petNode = pet.controller.node();
-        Tooltip.install(petNode, new Tooltip(pet.displayName));
+        // A single click toggles a list of every task of the tool the pet represents. The click waits briefly so
+        // a double click (switch to the card) does not flash the list; a drag never counts as a click.
+        pet.clickDelay.setOnFinished(e -> showPopover(pet));
+        pet.popover.setOnHidden(e -> pet.popoverHiddenAt = System.nanoTime());
+        petNode.addEventFilter(javafx.scene.input.MouseEvent.MOUSE_PRESSED, e -> {
+            pet.popoverOpenAtPress = pet.popover.isShowing() || recentlyHidden(pet);
+            pet.popover.hide();
+        });
         petNode.setOnMouseClicked(e -> {
             if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2) {
+                pet.clickDelay.stop();
+                pet.popover.hide();
                 if (onSwitchMode != null) onSwitchMode.run();
                 e.consume();
+            } else if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1) {
+                // Clicking while the list is open closes it (the press already hid it); otherwise open it.
+                if (e.isStillSincePress() && !pet.popoverOpenAtPress) pet.clickDelay.playFromStart();
+                e.consume();
             } else if (e.getButton() == MouseButton.SECONDARY) {
+                pet.clickDelay.stop();
+                pet.popover.hide();
                 showContextMenu(pet, e.getScreenX(), e.getScreenY());
                 e.consume();
             }
@@ -443,8 +482,117 @@ public final class PetRenderer implements StatusRenderer {
 
     @Override
     public void update(TaskCardViewModel primaryModel, TaskCardViewModel secondaryModel) {
-        updatePet(codexPet, modelForSource("codex", primaryModel, secondaryModel));
-        updatePet(claudePet, modelForSource("claude", primaryModel, secondaryModel));
+        TaskCardViewModel codex = modelForSource("codex", primaryModel, secondaryModel);
+        TaskCardViewModel claude = modelForSource("claude", primaryModel, secondaryModel);
+        updatePets(simpleDisplay(codex, codexPet), simpleDisplay(claude, claudePet));
+    }
+
+    private static PetDisplay simpleDisplay(TaskCardViewModel model, PetSlot pet) {
+        return new PetDisplay(model, false, pet.displayName,
+                model == null ? List.of() : List.of(new TaskListItem(model, false)));
+    }
+
+    /** Applies the pet assignment: each pet's task, lending state and popover list. */
+    public void updatePets(PetDisplay codex, PetDisplay claude) {
+        applyDisplay(codexPet, codex);
+        applyDisplay(claudePet, claude);
+    }
+
+    private void applyDisplay(PetSlot pet, PetDisplay display) {
+        updatePet(pet, display.model());
+        if (display.borrowed() != pet.borrowed) {
+            log.info("Pet {} {}", pet.id, display.borrowed()
+                    ? "lent to " + display.listSource() + ": " + (display.model() == null ? "" : display.model().title())
+                    : "returned to " + pet.displayName);
+        }
+        pet.display = display;
+        pet.borrowed = display.borrowed();
+        if (pet.popover.isShowing()) fillPopover(pet);
+    }
+
+    /** The auto-hide may close the list just before our press handler runs; treat that as "was open". */
+    private static boolean recentlyHidden(PetSlot pet) {
+        return System.nanoTime() - pet.popoverHiddenAt < 300_000_000L;
+    }
+
+    private void showPopover(PetSlot pet) {
+        Node petNode = pet.controller.node();
+        if (petNode.getScene() == null || petNode.getScene().getWindow() == null) return;
+        fillPopover(pet);
+        pet.popover.show(petNode.getScene().getWindow());
+        positionPopover(pet);
+    }
+
+    private void fillPopover(PetSlot pet) {
+        PetDisplay display = pet.display;
+        List<Node> children = new ArrayList<>();
+        String source = display == null ? pet.displayName : display.listSource();
+        List<TaskListItem> tasks = display == null ? List.of() : display.tasks();
+        long count = tasks.stream().filter(item -> !item.subtask()).count();
+        Label header = new Label(source + (count > 0 ? "  ·  " + count + " active" : ""));
+        header.setStyle("-fx-font-size: 11px; -fx-font-weight: bold; -fx-text-fill: "
+                + SourcePalette.accent(source) + ";");
+        VBox.setMargin(header, new Insets(0, 0, 4, 0));
+        children.add(header);
+        if (tasks.isEmpty()) {
+            Label empty = new Label("No active tasks");
+            empty.setStyle("-fx-font-size: 12px; -fx-text-fill: #94a3b8;");
+            children.add(empty);
+        }
+        for (int index = 0; index < tasks.size(); index++) {
+            TaskListItem item = tasks.get(index);
+            TaskRowView row = popoverRow(pet, index, item.subtask());
+            row.update(item.model());
+            children.add(row.node());
+        }
+        while (pet.popoverRows.size() > tasks.size()) pet.popoverRows.removeLast().dispose();
+        if (display != null && display.borrowed()) {
+            Label note = new Label("Lent by the " + pet.displayName + " pet while it has no tasks");
+            note.setStyle("-fx-font-size: 10px; -fx-text-fill: #64748b;");
+            note.setWrapText(true);
+            VBox.setMargin(note, new Insets(4, 0, 0, 0));
+            children.add(note);
+        }
+        pet.popoverContent.getChildren().setAll(children);
+        if (pet.popover.isShowing()) positionPopover(pet);
+    }
+
+    private static TaskRowView popoverRow(PetSlot pet, int index, boolean subtask) {
+        if (index < pet.popoverRows.size() && pet.popoverRows.get(index).isSubtask() == subtask) {
+            return pet.popoverRows.get(index);
+        }
+        TaskRowView row = new TaskRowView(subtask, false);
+        if (index < pet.popoverRows.size()) pet.popoverRows.set(index, row).dispose();
+        else pet.popoverRows.add(row);
+        return row;
+    }
+
+    /**
+     * Just above the pet's head when there is room, otherwise below it; kept on the pet's screen.
+     * The popover is anchored by its content edge, so its real height (and drop-shadow margin) cannot push it
+     * down over the pet - which would steal the hover and close it immediately.
+     */
+    private static void positionPopover(PetSlot pet) {
+        Bounds bounds = pet.controller.visibleScreenBounds();
+        if (bounds == null) return;
+        pet.popoverContent.applyCss();
+        pet.popoverContent.layout();
+        double height = pet.popoverContent.prefHeight(POPOVER_WIDTH);
+        Rectangle2D screen = Screen.getScreensForRectangle(bounds.getMinX(), bounds.getMinY(), 1, 1).stream()
+                .findFirst().orElse(Screen.getPrimary()).getVisualBounds();
+        double x = bounds.getMinX() + bounds.getWidth() / 2 - POPOVER_WIDTH / 2;
+        x = Math.max(screen.getMinX() + 4, Math.min(x, screen.getMaxX() - POPOVER_WIDTH - 4));
+        boolean above = bounds.getMinY() - POPOVER_GAP - height - 16 >= screen.getMinY() + 4;
+        pet.popover.setAnchorLocation(above ? PopupWindow.AnchorLocation.CONTENT_BOTTOM_LEFT
+                : PopupWindow.AnchorLocation.CONTENT_TOP_LEFT);
+        // The window also covers the drop shadow around the content; keep that clear of the pet as well.
+        Bounds visual = pet.popoverContent.getBoundsInLocal();
+        Bounds layout = pet.popoverContent.getLayoutBounds();
+        double shadowBelow = Math.max(0, visual.getMaxY() - layout.getMaxY());
+        double shadowAbove = Math.max(0, layout.getMinY() - visual.getMinY());
+        pet.popover.setAnchorX(x);
+        pet.popover.setAnchorY(above ? bounds.getMinY() - POPOVER_GAP - shadowBelow
+                : bounds.getMaxY() + POPOVER_GAP + shadowAbove);
     }
 
     private TaskCardViewModel modelForSource(String source, TaskCardViewModel primary,
@@ -492,11 +640,31 @@ public final class PetRenderer implements StatusRenderer {
         private TaskCardViewModel latestModel;
         private String lastLoggedSummary;
         private boolean manualActionActive;
+        private final Popup popover = new Popup();
+        private final VBox popoverContent = new VBox(2);
+        private final List<TaskRowView> popoverRows = new ArrayList<>();
+        /** Slightly longer than a typical double-click interval, so a double click never opens the list. */
+        private final PauseTransition clickDelay = new PauseTransition(Duration.millis(260));
+        private long popoverHiddenAt = Long.MIN_VALUE / 2;
+        private boolean popoverOpenAtPress;
+        private PetDisplay display;
+        private boolean borrowed;
 
         private PetSlot(String id, String displayName) {
             this.id = id;
             this.displayName = displayName;
             controller.setLogName(id);
+            popoverContent.setPrefWidth(POPOVER_WIDTH);
+            popoverContent.setMaxWidth(POPOVER_WIDTH);
+            popoverContent.setPadding(new Insets(10, 12, 10, 10));
+            popoverContent.setStyle("-fx-background-color: linear-gradient(to bottom, rgba(30,41,59,0.97), rgba(15,23,42,0.97));"
+                    + "-fx-background-radius: 12; -fx-border-radius: 12; -fx-border-color: rgba(148,163,184,0.22);");
+            popoverContent.setEffect(new javafx.scene.effect.DropShadow(12, 0, 3, javafx.scene.paint.Color.rgb(2, 6, 23, 0.45)));
+            popover.getContent().add(popoverContent);
+            // Closes on clicks elsewhere in TaskBeacon and when the app loses focus, without swallowing that
+            // click (swallowing it made the first attempt to drag the pet do nothing).
+            popover.setAutoHide(true);
+            popover.setConsumeAutoHidingEvents(false);
         }
     }
 }

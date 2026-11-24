@@ -391,6 +391,42 @@ public final class PetAnimationController {
 
     public Node node() { return container; }
 
+    /**
+     * Screen bounds of what is actually drawn: the current sprite frame trimmed to its opaque pixels. The pet box
+     * is larger than the sprite, and poses differ (a lying pet is short and stretches forward), so a popover is
+     * placed against this rather than the box.
+     */
+    javafx.geometry.Bounds visibleScreenBounds() {
+        Node target = hasCustomImage ? customImageView : avatar;
+        javafx.geometry.Bounds bounds = target.localToScreen(target.getBoundsInLocal());
+        if (bounds == null || !hasCustomImage) return bounds;
+        Image image = customImageView.getImage();
+        PixelReader reader = image == null ? null : image.getPixelReader();
+        if (reader == null) return bounds;
+        Rectangle2D viewport = customImageView.getViewport() != null ? customImageView.getViewport()
+                : new Rectangle2D(0, 0, image.getWidth(), image.getHeight());
+        int x0 = (int) viewport.getMinX();
+        int y0 = (int) viewport.getMinY();
+        int width = (int) Math.min(viewport.getWidth(), image.getWidth() - x0);
+        int height = (int) Math.min(viewport.getHeight(), image.getHeight() - y0);
+        if (width <= 0 || height <= 0) return bounds;
+        int minX = width, minY = height, maxX = -1, maxY = -1;
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                if ((reader.getArgb(x0 + x, y0 + y) >>> 24) <= 16) continue;
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+        }
+        if (maxX < 0) return bounds;
+        double scaleX = bounds.getWidth() / width;
+        double scaleY = bounds.getHeight() / height;
+        return new javafx.geometry.BoundingBox(bounds.getMinX() + minX * scaleX, bounds.getMinY() + minY * scaleY,
+                (maxX - minX + 1) * scaleX, (maxY - minY + 1) * scaleY);
+    }
+
     double displayWidth() { return container.getPrefWidth(); }
 
     boolean isShadowVisible() { return shadow.isVisible(); }

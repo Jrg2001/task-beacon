@@ -32,7 +32,8 @@ public final class DesktopController implements AutoCloseable {
     private final Supplier<Map<String, String>> sourceHealth;
     private final CompactCardRenderer cardRenderer = new CompactCardRenderer();
     private final PetRenderer petRenderer = new PetRenderer();
-    private final StableTaskSlots taskSlots = new StableTaskSlots();
+    /** A pet whose tool has had nothing to show for this long may be lent to the other tool. */
+    private final PetAssigner petAssigner = new PetAssigner(java.time.Duration.ofSeconds(3));
     private StatusRenderer currentRenderer;
     private final TaskViewModelFactory viewModels;
     private final Preferences preferences = Preferences.userNodeForPackage(DesktopController.class);
@@ -211,25 +212,10 @@ public final class DesktopController implements AutoCloseable {
         List<TaskState> tasks = registry.recentTasks();
         List<TaskState> activeTasks = registry.activeTasks();
         int active = activeTasks.size();
-        if (currentRenderer == petRenderer) {
-            TaskState codex = selectSourceTask(tasks, "codex");
-            TaskState claude = selectSourceTask(tasks, "claude");
-            int codexActive = countActiveForSource(activeTasks, "codex");
-            int claudeActive = countActiveForSource(activeTasks, "claude");
-            petRenderer.update(codex == null ? null : viewModels.create(codex, codexActive),
-                    claude == null ? null : viewModels.create(claude, claudeActive));
-        } else {
-            StableTaskSlots.Selection slots = taskSlots.select(activeTasks);
-            if (slots.primary() != null) {
-                TaskCardViewModel secondary = slots.secondary() == null ? null
-                        : viewModels.create(slots.secondary(), active);
-                currentRenderer.update(viewModels.create(slots.primary(), active), secondary);
-            } else {
-                selector.select(tasks, new SelectionContext(clock.instant(), completedTtl, null))
-                        .ifPresentOrElse(state -> currentRenderer.update(viewModels.create(state, active), null),
-                                () -> currentRenderer.idle());
-            }
-        }
+        List<TaskState> ranked = selector.rank(tasks, new SelectionContext(clock.instant(), completedTtl, null));
+        Map<String, List<TaskBoard.Group>> bySource = groupBySource(TaskBoard.group(ranked));
+        if (currentRenderer == petRenderer) refreshPets(bySource);
+        else refreshCard(bySource);
         cardStage.sizeToScene();
         taskList.setItems(FXCollections.observableArrayList(tasks));
         String health = sourceHealth.get().entrySet().stream()
@@ -240,22 +226,76 @@ public final class DesktopController implements AutoCloseable {
                 .filter(task -> task.attention() != io.taskbeacon.core.model.Attention.NONE).count());
     }
 
-    private TaskState selectSourceTask(List<TaskState> tasks, String sourceId) {
-        List<TaskState> sourceTasks = tasks.stream()
-                .filter(task -> belongsToSource(task, sourceId))
+    /** Groups keep their ranking order within each source. */
+    private static Map<String, List<TaskBoard.Group>> groupBySource(List<TaskBoard.Group> groups) {
+        Map<String, List<TaskBoard.Group>> bySource = new LinkedHashMap<>();
+        for (TaskBoard.Group group : groups) {
+            bySource.computeIfAbsent(TaskBoard.sourceKey(group.task()), ignored -> new ArrayList<>()).add(group);
+        }
+        return bySource;
+    }
+
+    private void refreshPets(Map<String, List<TaskBoard.Group>> bySource) {
+        Map<String, List<TaskState>> tasksBySource = new HashMap<>();
+        bySource.forEach((source, groups) -> tasksBySource.put(source,
+                groups.stream().map(TaskBoard.Group::task).toList()));
+        PetAssigner.Result result = petAssigner.assign(tasksBySource, clock.instant());
+        petRenderer.updatePets(petDisplay(result, PetAssigner.CODEX, bySource),
+                petDisplay(result, PetAssigner.CLAUDE, bySource));
+    }
+
+    private PetRenderer.PetDisplay petDisplay(PetAssigner.Result result, String owner,
+                                              Map<String, List<TaskBoard.Group>> bySource) {
+        PetAssigner.PetView view = result.pets().get(owner);
+        List<TaskBoard.Group> groups = bySource.getOrDefault(view.taskSource(), List.of());
+        TaskCardViewModel model = view.task() == null ? null : viewModels.create(view.task(), groups.size());
+        return new PetRenderer.PetDisplay(model, view.borrowed(), sourceDisplayName(view.taskSource()),
+                listItems(groups));
+    }
+
+    /**
+     * Card order: tasks needing attention first (so they are never cut off), then by tool, then by start time,
+     * which keeps rows from jumping around while tasks progress.
+     */
+    private void refreshCard(Map<String, List<TaskBoard.Group>> bySource) {
+        List<TaskBoard.Group> groups = bySource.values().stream().flatMap(List::stream)
+                .sorted(Comparator.comparing((TaskBoard.Group group) -> PetAssigner.importance(group.task()) < 2)
+                        .thenComparingInt(group -> sourceOrder(TaskBoard.sourceKey(group.task())))
+                        .thenComparing(group -> startOf(group.task())))
                 .toList();
-        return selector.select(sourceTasks,
-                new SelectionContext(clock.instant(), completedTtl, null)).orElse(null);
+        cardRenderer.showTasks(listItems(groups), 0);
     }
 
-    private int countActiveForSource(List<TaskState> activeTasks, String sourceId) {
-        return (int) activeTasks.stream().filter(task -> belongsToSource(task, sourceId)).count();
+    private List<TaskListItem> listItems(List<TaskBoard.Group> groups) {
+        int count = groups.size();
+        List<TaskListItem> items = new ArrayList<>();
+        for (TaskBoard.Group group : groups) {
+            items.add(new TaskListItem(viewModels.create(group.task(), count), false));
+            for (TaskState subtask : group.subtasks()) {
+                items.add(new TaskListItem(viewModels.create(subtask, count), true));
+            }
+        }
+        return items;
     }
 
-    private boolean belongsToSource(TaskState task, String sourceId) {
-        String id = task.key().sourceId().toLowerCase(Locale.ROOT);
-        String name = task.sourceDisplayName().toLowerCase(Locale.ROOT);
-        return id.contains(sourceId) || name.contains(sourceId);
+    private static int sourceOrder(String source) {
+        return switch (source) {
+            case PetAssigner.CODEX -> 0;
+            case PetAssigner.CLAUDE -> 1;
+            default -> 2;
+        };
+    }
+
+    private static java.time.Instant startOf(TaskState task) {
+        return task.startedAt() != null ? task.startedAt() : task.discoveredAt();
+    }
+
+    private static String sourceDisplayName(String source) {
+        return switch (source) {
+            case PetAssigner.CODEX -> "Codex";
+            case PetAssigner.CLAUDE -> "Claude Code";
+            default -> source;
+        };
     }
 
     private void togglePanel() { if (panelStage.isShowing()) panelStage.hide(); else showPanel(); }

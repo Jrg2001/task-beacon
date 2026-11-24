@@ -4,15 +4,22 @@ import io.taskbeacon.core.model.*;
 
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 
 public final class DefaultPrimaryTaskSelector implements PrimaryTaskSelector {
     @Override public Optional<TaskState> select(Collection<TaskState> tasks, SelectionContext context) {
-        return tasks.stream().filter(state -> visible(state, context))
-                .max(Comparator.comparingInt((TaskState state) -> priority(state, context))
-                        .thenComparing(TaskState::lastMeaningfulProgressAt,
-                                Comparator.nullsFirst(Comparator.naturalOrder()))
-                        .thenComparing(TaskState::updatedAt));
+        return tasks.stream().filter(state -> visible(state, context)).max(order(context));
+    }
+
+    @Override public List<TaskState> rank(Collection<TaskState> tasks, SelectionContext context) {
+        return tasks.stream().filter(state -> visible(state, context)).sorted(order(context).reversed()).toList();
+    }
+
+    private Comparator<TaskState> order(SelectionContext context) {
+        return Comparator.comparingInt((TaskState state) -> priority(state, context))
+                .thenComparing(TaskState::lastMeaningfulProgressAt, Comparator.nullsFirst(Comparator.naturalOrder()))
+                .thenComparing(TaskState::updatedAt);
     }
 
     private boolean visible(TaskState state, SelectionContext context) {
