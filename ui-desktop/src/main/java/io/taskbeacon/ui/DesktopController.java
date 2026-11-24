@@ -63,6 +63,7 @@ public final class DesktopController implements AutoCloseable {
         this.cardStage = stage;
         Platform.setImplicitExit(false);
         stage.initStyle(StageStyle.TRANSPARENT);
+        addAppIcons(stage);
 
         cardRenderer.setOnSwitchMode(() -> switchRenderer("pet"));
         cardRenderer.setOnShowPanel(() -> Platform.runLater(this::showPanel));
@@ -118,8 +119,17 @@ public final class DesktopController implements AutoCloseable {
         });
     }
 
+    /** The Akita app icon (taskbar, Alt+Tab) instead of the default Java one. */
+    private static void addAppIcons(Stage stage) {
+        for (String name : new String[] {"/icons/tray-16.png", "/icons/tray-32.png"}) {
+            var input = DesktopController.class.getResourceAsStream(name);
+            if (input != null) stage.getIcons().add(new javafx.scene.image.Image(input));
+        }
+    }
+
     private void createSecondaryPetStage() {
         secondaryPetStage = new Stage(StageStyle.TRANSPARENT);
+        addAppIcons(secondaryPetStage);
         Scene scene = new Scene((javafx.scene.Parent) petRenderer.createSecondary());
         scene.setFill(Color.TRANSPARENT);
         secondaryPetStage.setScene(scene);
@@ -172,6 +182,7 @@ public final class DesktopController implements AutoCloseable {
     private void createPanel() {
         panelStage = new Stage(StageStyle.UTILITY);
         panelStage.setTitle("TaskBeacon tasks");
+        addAppIcons(panelStage);
         taskList = new ListView<>();
         taskList.setCellFactory(ignored -> new ListCell<>() {
             @Override protected void updateItem(TaskState state, boolean empty) {

@@ -41,10 +41,7 @@ final class TrayController implements AutoCloseable {
             menu.addSeparator();
             MenuItem sources = new MenuItem("Sources / Settings"); sources.addActionListener(event -> settings.run()); menu.add(sources);
             MenuItem exit = new MenuItem("Quit"); exit.addActionListener(event -> quit.run()); menu.add(exit);
-            BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D graphics = image.createGraphics();
-            graphics.setColor(new Color(59, 130, 246)); graphics.fillOval(2, 2, 12, 12); graphics.dispose();
-            icon = new TrayIcon(image, "TaskBeacon", menu); icon.setImageAutoSize(true);
+            icon = new TrayIcon(trayImage(), "TaskBeacon", menu); icon.setImageAutoSize(true);
             SystemTray.getSystemTray().add(icon);
         } catch (AWTException | RuntimeException ignored) { icon = null; }
     }
@@ -63,6 +60,27 @@ final class TrayController implements AutoCloseable {
 
     private static String modeLabel(String mode) {
         return mode.equals("pet") ? "Switch to Compact Card" : "Switch to Desktop Pet";
+    }
+
+    /**
+     * The Akita icon (tools/icons/make_icons.py) at the size the tray asks for: the 32 px version on scaled
+     * displays, so it is not blown up from 16 px. Falls back to a plain dot if the resource is missing.
+     */
+    static Image trayImage() {
+        int wanted = SystemTray.isSupported() ? SystemTray.getSystemTray().getTrayIconSize().height : 16;
+        String name = wanted > 20 ? "/icons/tray-32.png" : "/icons/tray-16.png";
+        try (var input = TrayController.class.getResourceAsStream(name)) {
+            if (input != null) {
+                BufferedImage image = javax.imageio.ImageIO.read(input);
+                if (image != null) return image;
+            }
+        } catch (java.io.IOException ignored) {
+            // fall through to the dot
+        }
+        BufferedImage image = new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D graphics = image.createGraphics();
+        graphics.setColor(new Color(59, 130, 246)); graphics.fillOval(2, 2, 12, 12); graphics.dispose();
+        return image;
     }
 
     @Override public void close() { if (icon != null) SystemTray.getSystemTray().remove(icon); }

@@ -85,12 +85,14 @@ Linux/macOS：
 
 ## 打包
 
-Windows 可生成包含内置 Java 运行时、可直接双击启动的应用目录：
+三种产物都内置精简后的 Java 运行时（只包含用到的模块，约 60 MB），用户无需另装 Java；程序、快捷方式和托盘都使用秋田犬图标（由 `tools/icons/make_icons.py` 生成）。
 
-```powershell
-./gradlew.bat :app:portableExe
-```
+| 命令 | 产物 | 说明 |
+|---|---|---|
+| `./gradlew.bat :app:portableExe` | `release/TaskBeacon/` | 绿色版目录，入口为 `TaskBeacon.exe`；整个目录才是完整应用，不能只复制 `.exe`。项目根目录的 `TaskBeacon.bat` 可直接双击启动它。 |
+| `./gradlew.bat :app:portableZip` | `release/TaskBeacon-<版本>-windows-portable.zip` | 上述目录的压缩包，解压到任意位置后双击 `TaskBeacon.exe` 即可。 |
+| `./gradlew.bat :app:windowsInstaller` | `release/TaskBeacon-<版本>.exe` | 安装程序：为当前用户安装到 `%LOCALAPPDATA%\TaskBeacon App`（无需管理员权限），创建开始菜单和桌面快捷方式，可在“应用和功能”中卸载；新版本安装时会直接升级旧版本。卸载只删除程序本身，配置、日志和宠物数据（`%LOCALAPPDATA%\TaskBeacon`）会保留。 |
 
-入口文件位于 `release/TaskBeacon/TaskBeacon.exe`。整个 `TaskBeacon` 目录是完整应用，不能只复制其中的 `.exe`。项目根目录的 `TaskBeacon.bat` 可直接双击启动该程序。修改源码后需要重新执行上述命令生成新版本。
+生成安装程序需要 WiX Toolset 3（例如在管理员终端执行 `winget install --id WiXToolset.WiXToolset -e`），并确保其 `bin` 目录在 `PATH` 中。修改源码后需要重新执行对应命令生成新版本；`jpackage` 产物按宿主 OS 构建，不做跨平台交叉编译。
 
-`jpackage` 产物按宿主 OS 构建，不做跨平台安装包交叉编译；生成 Windows 安装器还需要 WiX Toolset。
+新增依赖时，如果它需要其他 Java 模块，需要同步更新 `app/build.gradle.kts` 中的 `runtimeModules`（可用 `jdeps --print-module-deps` 检查）。
