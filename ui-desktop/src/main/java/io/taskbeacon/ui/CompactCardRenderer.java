@@ -167,17 +167,17 @@ public final class CompactCardRenderer implements StatusRenderer {
     public void showContextMenu(double screenX, double screenY) {
         javafx.scene.control.ContextMenu contextMenu = new javafx.scene.control.ContextMenu();
 
-        javafx.scene.control.MenuItem switchItem = new javafx.scene.control.MenuItem("Switch to Desktop Pet");
+        javafx.scene.control.MenuItem switchItem = new javafx.scene.control.MenuItem("\u5207\u6362\u5230\u684c\u9762\u5ba0\u7269 / Switch to Desktop Pet");
         switchItem.setOnAction(e -> {
             if (onSwitchMode != null) onSwitchMode.run();
         });
 
-        javafx.scene.control.MenuItem panelItem = new javafx.scene.control.MenuItem("Tasks Overview");
+        javafx.scene.control.MenuItem panelItem = new javafx.scene.control.MenuItem("\u4efb\u52a1\u603b\u89c8 / Tasks Overview");
         panelItem.setOnAction(e -> {
             if (onShowPanel != null) onShowPanel.run();
         });
 
-        javafx.scene.control.MenuItem quitItem = new javafx.scene.control.MenuItem("Quit");
+        javafx.scene.control.MenuItem quitItem = new javafx.scene.control.MenuItem("\u9000\u51fa / Quit");
         quitItem.setOnAction(e -> {
             if (onQuit != null) onQuit.run();
         });

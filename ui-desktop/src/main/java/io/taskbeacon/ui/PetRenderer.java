@@ -215,15 +215,15 @@ public final class PetRenderer implements StatusRenderer {
     private void showContextMenu(PetSlot pet, double screenX, double screenY) {
         ContextMenu contextMenu = new ContextMenu();
 
-        MenuItem petTitle = new MenuItem(pet.displayName + " Pet");
+        MenuItem petTitle = new MenuItem(pet.displayName + " \u5ba0\u7269 / " + pet.displayName + " Pet");
         petTitle.setDisable(true);
 
-        MenuItem switchItem = new MenuItem("Switch to Compact Card");
+        MenuItem switchItem = new MenuItem("\u5207\u6362\u5230\u7d27\u51d1\u5361\u7247 / Switch to Compact Card");
         switchItem.setOnAction(e -> {
             if (onSwitchMode != null) onSwitchMode.run();
         });
 
-        Menu actionMenu = new Menu("Play Action / \u64ad\u653e\u52a8\u4f5c");
+        Menu actionMenu = new Menu("\u64ad\u653e\u52a8\u4f5c / Play Action");
         actionMenu.getItems().addAll(
                 actionItem(pet, "\u5f85\u673a / Idle", PetAnimationController.ManualAction.IDLE),
                 actionItem(pet, "\u4f38\u61d2\u8170 / Stretch", PetAnimationController.ManualAction.STRETCH),
@@ -237,20 +237,20 @@ public final class PetRenderer implements StatusRenderer {
                 restoreActionItem(pet)
         );
 
-        Menu builtInMenu = new Menu("Built-in Pets / \u5185\u7f6e\u5ba0\u7269");
+        Menu builtInMenu = new Menu("\u5185\u7f6e\u5ba0\u7269 / Built-in Pets");
         ToggleGroup packGroup = new ToggleGroup();
         builtInMenu.getItems().addAll(
-                packMenu(pet, "Dogs / \u72d7", BundledPetPacks.DOGS, packGroup),
-                packMenu(pet, "Cats / \u732b", BundledPetPacks.CATS, packGroup)
+                packMenu(pet, "\u72d7 / Dogs", BundledPetPacks.DOGS, packGroup),
+                packMenu(pet, "\u732b / Cats", BundledPetPacks.CATS, packGroup)
         );
 
-        MenuItem selectImageItem = new MenuItem("Choose Custom Image / \u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u7247...");
+        MenuItem selectImageItem = new MenuItem("\u9009\u62e9\u81ea\u5b9a\u4e49\u56fe\u7247 / Choose Custom Image...");
         selectImageItem.setOnAction(e -> chooseCustomImage(pet));
 
-        Menu sizeMenu = new Menu("Pet Size / \u5ba0\u7269\u5927\u5c0f");
+        Menu sizeMenu = new Menu("\u5ba0\u7269\u5927\u5c0f / Pet Size");
         ToggleGroup sizeGroup = new ToggleGroup();
         double[] scales = {0.8, 1.0, 1.25, 1.5, 1.75, 2.0};
-        String[] labels = {"80% (Small)", "100% (Default)", "125% (Medium)", "150% (Large)", "175% (Extra Large)", "200% (Giant)"};
+        String[] labels = {"80% (\u5c0f / Small)", "100% (\u9ed8\u8ba4 / Default)", "125% (\u4e2d / Medium)", "150% (\u5927 / Large)", "175% (\u7279\u5927 / Extra Large)", "200% (\u5de8\u5927 / Giant)"};
 
         for (int i = 0; i < scales.length; i++) {
             double s = scales[i];
@@ -264,17 +264,17 @@ public final class PetRenderer implements StatusRenderer {
         }
         sizeMenu.setDisable(!pet.controller.hasCustomImage());
 
-        MenuItem resetImageItem = new MenuItem("Reset to Default Akita / \u6062\u590d\u9ed8\u8ba4\u79cb\u7530\u72ac");
+        MenuItem resetImageItem = new MenuItem("\u6062\u590d\u9ed8\u8ba4\u79cb\u7530\u72ac / Reset to Default Akita");
         resetImageItem.setDisable(BundledPetPacks.DEFAULT_ID.equals(pet.packId));
         resetImageItem.setOnAction(e -> BundledPetPacks.find(BundledPetPacks.DEFAULT_ID)
                 .ifPresent(pack -> selectPack(pet, pack)));
 
-        MenuItem panelItem = new MenuItem("Tasks Overview");
+        MenuItem panelItem = new MenuItem("\u4efb\u52a1\u603b\u89c8 / Tasks Overview");
         panelItem.setOnAction(e -> {
             if (onShowPanel != null) onShowPanel.run();
         });
 
-        MenuItem quitItem = new MenuItem("Quit");
+        MenuItem quitItem = new MenuItem("\u9000\u51fa / Quit");
         quitItem.setOnAction(e -> {
             if (onQuit != null) onQuit.run();
         });

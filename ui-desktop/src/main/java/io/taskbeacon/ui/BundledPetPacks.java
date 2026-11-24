@@ -20,7 +20,7 @@ final class BundledPetPacks {
     static final String DEFAULT_ID = "Dog-2-Akita";
 
     /**
-     * {@code label} is the English name; {@code chineseLabel} follows it in the menu. {@code sizeFactor} scales
+     * {@code label} is the English name; the menu shows {@code chineseLabel} first. {@code sizeFactor} scales
      * the pet's 100% size for breeds the artwork draws too big (tools/readme/make_readme_media.py mirrors it).
      */
     record Pack(String id, String label, String chineseLabel, String category, String idleFile, double sizeFactor) {
@@ -29,7 +29,7 @@ final class BundledPetPacks {
         }
 
         String menuLabel() {
-            return label + " / " + chineseLabel;
+            return chineseLabel + " / " + label;
         }
 
         String resourceDirectory() {
