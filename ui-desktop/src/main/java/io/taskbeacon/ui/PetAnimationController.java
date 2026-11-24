@@ -438,9 +438,24 @@ public final class PetAnimationController {
         updateCustomDimensions();
     }
 
+    /**
+     * Screen pixels per sprite pixel at 100%. The 100px packs draw breeds at very different sizes (the Great Dane
+     * is over twice as tall as the Akita), so sprites taller than the Akita's are scaled by the square root of
+     * the ratio: bigger breeds still look bigger, but at 100% they stay near the Akita and larger sizes remain
+     * useful. E.g. Akita (crop 22) 3x, Border Collie / Husky / Golden (34) 2.4x, Great Dane (48) 2.0x.
+     */
+    private double packPixelScale() {
+        if (customPackCrop == null || customPackCrop.getHeight() <= REFERENCE_CROP_HEIGHT) return 3.0;
+        return 3.0 * Math.sqrt(REFERENCE_CROP_HEIGHT / customPackCrop.getHeight());
+    }
+
+    /** Crop height of the Akita, the default pet, whose 100% size is the reference. */
+    private static final double REFERENCE_CROP_HEIGHT = 22;
+
     private void updateCustomDimensions() {
-        double baseW = pixelSpritePack && customPackCrop != null ? customPackCrop.getWidth() * 3.0 : 84.0;
-        double baseH = pixelSpritePack && customPackCrop != null ? customPackCrop.getHeight() * 3.0 : 76.0;
+        double pixels = packPixelScale();
+        double baseW = pixelSpritePack && customPackCrop != null ? customPackCrop.getWidth() * pixels : 84.0;
+        double baseH = pixelSpritePack && customPackCrop != null ? customPackCrop.getHeight() * pixels : 76.0;
         double fitW = baseW * customScale;
         double fitH = baseH * customScale;
         customImageView.setFitWidth(fitW);

@@ -57,29 +57,53 @@ def akita_states():
                     tiles.append(render(im, box, canvas, STATE_SCALE)); durations.append(ms)
         save_gif(tiles, durations, f'akita-{state}.gif')
 
+def app_size_factor(pack_dir):
+    """Mirrors PetAnimationController.packPixelScale: sprites taller than the Akita's crop are shown smaller."""
+    boxes = []
+    for f in os.listdir(pack_dir):
+        if f.endswith('.png'):
+            sheet = Image.open(os.path.join(pack_dir, f))
+            if sheet.size[1] == 100 and sheet.size[0] % 100 == 0:
+                boxes.append(union_bbox(frames(os.path.join(pack_dir, f), 100)))
+    w = max(b[2] for b in boxes) - min(b[0] for b in boxes)
+    h = max(b[3] for b in boxes) - min(b[1] for b in boxes)
+    h = max(h, max(w, h * 4 / 3) * 3 / 4)
+    h = -(-h // 2) * 2
+    return 1.0 if h <= 22 else (22 / h) ** 0.5
+
 def lineup():
+    """Idle animations of every pet, dogs at their relative in-app size (see app_size_factor)."""
     dogs = [('Dog-1-Golden-Retriever', 'Golden-Retriever-idle'), ('Dog-2-Akita', 'Akita-Idle'),
             ('Dog-3-Great-Dane', 'Great-Dane-idle'), ('Dog-4-Schnauzer', 'Schnauzer-Idle'),
             ('Dog-5-Saint-Bernard', 'Saint-Bernard-Idle'), ('Dog-6-Siberian-Husky', 'Siberian-Husky-Idle'),
             ('Dog-7-Sprite', 'Border-Collie-Idle')]
     cats = [(f'Cat-{i}', f'Cat-{i}-Idle') for i in range(1, 7)]
-    rows = [[frames(f'{PETS}/dogs/{d}/{f}.png', 100) for d, f in dogs],
-            [frames(f'{PETS}/cats/{c}/{f}.png', 50) for c, f in cats]]
+
+    def scaled(fs, factor):
+        """Crops every frame to the animation's bounds and enlarges it with crisp pixels."""
+        box = union_bbox(fs)
+        w, h = box[2] - box[0], box[3] - box[1]
+        size = (round(w * SCALE * factor), round(h * SCALE * factor))
+        return [im.crop(box).resize(size, Image.NEAREST) for im in fs]
+
+    rows = [[scaled(frames(f'{PETS}/dogs/{d}/{f}.png', 100), app_size_factor(f'{PETS}/dogs/{d}'))
+             for d, f in dogs],
+            [scaled(frames(f'{PETS}/cats/{c}/{f}.png', 50), 1.0) for c, f in cats]]
     count = max(len(fs) for row in rows for fs in row)
-    cells = []
-    for row in rows:
-        cells.append([(fs, union_bbox(fs)) for fs in row])
-    cell_w = max(b[2] - b[0] for row in cells for _, b in row) + 6
-    cell_h = max(b[3] - b[1] for row in cells for _, b in row) + 7
-    cols = max(len(row) for row in cells)
+    cell_w = max(fs[0].size[0] for row in rows for fs in row) + 6 * SCALE
+    row_h = [max(fs[0].size[1] for fs in row) + 7 * SCALE for row in rows]
+    cols = max(len(row) for row in rows)
     tiles = []
     for i in range(count):
-        sheet = Image.new('RGBA', (cols * cell_w * SCALE, len(cells) * cell_h * SCALE), BG)
-        for r, row in enumerate(cells):
-            offset = (cols - len(row)) * cell_w * SCALE // 2
-            for c, (fs, box) in enumerate(row):
-                sheet.paste(render(fs[i % len(fs)], box, (cell_w, cell_h)),
-                            (offset + c * cell_w * SCALE, r * cell_h * SCALE))
+        sheet = Image.new('RGBA', (cols * cell_w, sum(row_h)), BG)
+        y = 0
+        for row, h in zip(rows, row_h):
+            offset = (cols - len(row)) * cell_w // 2
+            for c, fs in enumerate(row):
+                im = fs[i % len(fs)]
+                sheet.alpha_composite(im, (offset + c * cell_w + (cell_w - im.size[0]) // 2,
+                                           y + h - im.size[1] - 2 * SCALE))
+            y += h
         tiles.append(sheet)
     save_gif(tiles, [200] * len(tiles), 'pets-lineup.gif')
 
