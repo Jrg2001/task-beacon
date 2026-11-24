@@ -74,7 +74,7 @@ def app_size_factor(pack_dir):
 def lineup():
     """Idle animations of every pet, dogs at their relative in-app size (see app_size_factor)."""
     dogs = [('Dog-1-Golden-Retriever', 'Golden-Retriever-idle'), ('Dog-2-Akita', 'Akita-Idle'),
-            ('Dog-3-Great-Dane', 'Great-Dane-idle'), ('Dog-4-Schnauzer', 'Schnauzer-Idle'),
+            ('Dog-3-Great-Dane', 'Weimaraner-idle'), ('Dog-4-Schnauzer', 'Schnauzer-Idle'),
             ('Dog-5-Saint-Bernard', 'Saint-Bernard-Idle'), ('Dog-6-Siberian-Husky', 'Siberian-Husky-Idle'),
             ('Dog-7-Sprite', 'Border-Collie-Idle')]
     cats = [(f'Cat-{i}', f'Cat-{i}-Idle') for i in range(1, 7)]

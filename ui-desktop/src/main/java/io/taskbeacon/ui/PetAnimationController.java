@@ -440,10 +440,10 @@ public final class PetAnimationController {
 
     /**
      * Screen pixels per sprite pixel at 100% (cats too, so they come out a little smaller than the Akita).
-     * The 100px dog packs draw breeds at very different sizes (the Great Dane
+     * The 100px dog packs draw breeds at very different sizes (the tallest one
      * is over twice as tall as the Akita), so sprites taller than the Akita's are scaled by the square root of
      * the ratio: bigger breeds still look bigger, but at 100% they stay near the Akita and larger sizes remain
-     * useful. E.g. Akita (crop 22) 3x, Border Collie / Husky / Golden (34) 2.4x, Great Dane (48) 2.0x.
+     * useful. E.g. Akita (crop 22) 3x, Border Collie / Husky / Golden (34) 2.4x, Weimaraner (48) 2.0x.
      */
     private double packPixelScale() {
         if (customPackCrop == null || customPackCrop.getHeight() <= REFERENCE_CROP_HEIGHT) return 3.0;

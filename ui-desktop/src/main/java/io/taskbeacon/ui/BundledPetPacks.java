@@ -28,7 +28,8 @@ final class BundledPetPacks {
     static final List<Pack> DOGS = List.of(
             new Pack("Dog-1-Golden-Retriever", "Golden Retriever", "dogs", "Golden-Retriever-idle.png"),
             new Pack(DEFAULT_ID, "Akita", "dogs", "Akita-Idle.png"),
-            new Pack("Dog-3-Great-Dane", "Great Dane", "dogs", "Great-Dane-idle.png"),
+            // Id kept for saved preferences; artwork is the CC0 Great Dane set recoloured as a Weimaraner.
+            new Pack("Dog-3-Great-Dane", "Weimaraner", "dogs", "Weimaraner-idle.png"),
             new Pack("Dog-4-Schnauzer", "Schnauzer", "dogs", "Schnauzer-Idle.png"),
             new Pack("Dog-5-Saint-Bernard", "Saint Bernard", "dogs", "Saint-Bernard-Idle.png"),
             new Pack("Dog-6-Siberian-Husky", "Siberian Husky", "dogs", "Siberian-Husky-Idle.png"),
