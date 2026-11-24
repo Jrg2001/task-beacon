@@ -439,7 +439,8 @@ public final class PetAnimationController {
     }
 
     /**
-     * Screen pixels per sprite pixel at 100%. The 100px packs draw breeds at very different sizes (the Great Dane
+     * Screen pixels per sprite pixel at 100% (cats too, so they come out a little smaller than the Akita).
+     * The 100px dog packs draw breeds at very different sizes (the Great Dane
      * is over twice as tall as the Akita), so sprites taller than the Akita's are scaled by the square root of
      * the ratio: bigger breeds still look bigger, but at 100% they stay near the Akita and larger sizes remain
      * useful. E.g. Akita (crop 22) 3x, Border Collie / Husky / Golden (34) 2.4x, Great Dane (48) 2.0x.
@@ -502,6 +503,7 @@ public final class PetAnimationController {
         customStateFiles.clear();
         customStateFiles.put("idle", primaryFile);
         customPackCrop = null;
+        packFrameSize = 0;
         pixelSpritePack = false;
 
         File parentDir = primaryFile.getParentFile();
@@ -549,18 +551,26 @@ public final class PetAnimationController {
         }
     }
 
+    /**
+     * Pixel-art packs use square frames of one size: 100px (dogs) or 50px (cats). The union of every state's
+     * content gives one crop for the whole pack, so the pet keeps the same size and pixel density in every state.
+     */
     private void computePackCrop(File[] siblings) {
         double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE;
         double maxX = -1, maxY = -1;
         boolean found = false;
+        int size = 0;
         for (File file : siblings) {
             String name = file.getName().toLowerCase(Locale.ROOT);
             if (!name.endsWith(".png")) continue;
             Image image = new Image(file.toURI().toString());
-            if (image.isError() || Math.round(image.getHeight()) != 100
-                    || Math.round(image.getWidth()) % 100 != 0) continue;
-            int frames = Math.max(1, (int) Math.round(image.getWidth() / 100.0));
-            Rectangle2D crop = computeContentCrop(image, 100, 100, frames);
+            if (image.isError()) continue;
+            int height = (int) Math.round(image.getHeight());
+            if (!PACK_FRAME_SIZES.contains(height) || Math.round(image.getWidth()) % height != 0) continue;
+            if (size == 0) size = height;
+            if (height != size) continue;
+            int frames = Math.max(1, (int) Math.round(image.getWidth() / height));
+            Rectangle2D crop = computeContentCrop(image, size, size, frames);
             minX = Math.min(minX, crop.getMinX());
             minY = Math.min(minY, crop.getMinY());
             maxX = Math.max(maxX, crop.getMaxX());
@@ -577,11 +587,18 @@ public final class PetAnimationController {
         height = Math.ceil(height / 2.0) * 2.0;
         double centerX = (minX + maxX) / 2.0;
         double centerY = (minY + maxY) / 2.0;
-        double x = Math.max(0, Math.min(100 - width, Math.floor(centerX - width / 2.0)));
-        double y = Math.max(0, Math.min(100 - height, Math.floor(centerY - height / 2.0)));
+        width = Math.min(width, size);
+        height = Math.min(height, size);
+        double x = Math.max(0, Math.min(size - width, Math.floor(centerX - width / 2.0)));
+        double y = Math.max(0, Math.min(size - height, Math.floor(centerY - height / 2.0)));
         customPackCrop = new Rectangle2D(x, y, width, height);
+        packFrameSize = size;
         pixelSpritePack = true;
     }
+
+    private static final java.util.Set<Integer> PACK_FRAME_SIZES = java.util.Set.of(50, 100);
+    /** Frame size of the current pixel-art pack (see computePackCrop), 0 when there is none. */
+    private int packFrameSize;
 
     private Rectangle2D computeContentCrop(Image image, double frameW, double frameH, int frameCount) {
         if (image == null || frameW <= 0 || frameH <= 0) {
@@ -680,7 +697,7 @@ public final class PetAnimationController {
                         ? detectDeclaredFrames(file, image, frameCount) : List.of();
                 currentSpriteViewports = detectedFrames;
                 Rectangle2D crop = !detectedFrames.isEmpty() ? detectedFrames.getFirst()
-                        : pixelSpritePack && frameWidth == 100 && frameHeight == 100
+                        : pixelSpritePack && frameWidth == packFrameSize && frameHeight == packFrameSize
                         ? customPackCrop : computeContentCrop(image, frameWidth, frameHeight, frameCount);
                 double cropX = crop.getMinX();
                 double cropY = crop.getMinY();
@@ -715,7 +732,7 @@ public final class PetAnimationController {
             } else {
                 currentSpriteFrameCount = 1;
                 currentSpriteViewports = List.of();
-                Rectangle2D crop = pixelSpritePack && w == 100 && h == 100
+                Rectangle2D crop = pixelSpritePack && w == packFrameSize && h == packFrameSize
                         ? customPackCrop : computeContentCrop(image, w, h, 1);
                 boolean isPixelArt = pixelSpritePack || crop.getWidth() < 64 || crop.getHeight() < 64;
                 customImageView.setSmooth(!isPixelArt);
@@ -891,6 +908,7 @@ public final class PetAnimationController {
         currentlyLoadedCustomFile = null;
         customStateFiles.clear();
         customPackCrop = null;
+        packFrameSize = 0;
         pixelSpritePack = false;
         currentCustomMode = "";
         customIdleTimer.stop();
