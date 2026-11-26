@@ -111,7 +111,9 @@ def lineup():
                                            y + h - im.size[1] - 2 * SCALE))
             y += h
         tiles.append(sheet)
-    save_gif(tiles, [200] * len(tiles), 'pets-lineup.gif')
+    # Bump the version in the name (and in README.md) whenever the lineup changes: browsers cache the
+    # image by URL, so a changed file under the old name can keep showing the previous lineup.
+    save_gif(tiles, [200] * len(tiles), 'pets-lineup-v2.gif')
 
 os.makedirs(OUT, exist_ok=True)
 akita_states()
