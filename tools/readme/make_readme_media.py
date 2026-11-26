@@ -78,8 +78,9 @@ def _crop_factor(pack_dir):
     return 1.0 if h <= 22 else (22 / h) ** 0.5
 
 def lineup():
-    """Idle animations of every pet, dogs at their relative in-app size (see app_size_factor)."""
-    dogs = [('Dog-1-Golden-Retriever', 'Golden-Retriever-idle'), ('Dog-2-Akita', 'Akita-Idle'),
+    """Idle animations of every pet, dogs at their relative in-app size (see app_size_factor).
+    Two rows of seven: the other dogs, then the Akita (the default pet) leading the cats."""
+    dogs = [('Dog-1-Golden-Retriever', 'Golden-Retriever-idle'),
             ('Dog-3-Great-Dane', 'Weimaraner-idle'), ('Dog-4-Schnauzer', 'Schnauzer-Idle'),
             ('Dog-5-Saint-Bernard', 'Saint-Bernard-Idle'), ('Dog-6-Siberian-Husky', 'Siberian-Husky-Idle'),
             ('Dog-7-Sprite', 'Border-Collie-Idle'), ('Dog-8-Samoyed', 'Samoyed-Idle')]
@@ -92,9 +93,12 @@ def lineup():
         size = (round(w * SCALE * factor), round(h * SCALE * factor))
         return [im.crop(box).resize(size, Image.NEAREST) for im in fs]
 
-    rows = [[scaled(frames(f'{PETS}/dogs/{d}/{f}.png', 100), app_size_factor(f'{PETS}/dogs/{d}'))
-             for d, f in dogs],
-            [scaled(frames(f'{PETS}/cats/{c}/{f}.png', 50), 1.0) for c, f in cats]]
+    def dog(d, f):
+        return scaled(frames(f'{PETS}/dogs/{d}/{f}.png', 100), app_size_factor(f'{PETS}/dogs/{d}'))
+
+    rows = [[dog(d, f) for d, f in dogs],
+            [dog('Dog-2-Akita', 'Akita-Idle')]
+            + [scaled(frames(f'{PETS}/cats/{c}/{f}.png', 50), 1.0) for c, f in cats]]
     count = max(len(fs) for row in rows for fs in row)
     cell_w = max(fs[0].size[0] for row in rows for fs in row) + 6 * SCALE
     row_h = [max(fs[0].size[1] for fs in row) + 7 * SCALE for row in rows]
@@ -113,7 +117,7 @@ def lineup():
         tiles.append(sheet)
     # Bump the version in the name (and in README.md) whenever the lineup changes: browsers cache the
     # image by URL, so a changed file under the old name can keep showing the previous lineup.
-    save_gif(tiles, [200] * len(tiles), 'pets-lineup-v2.gif')
+    save_gif(tiles, [200] * len(tiles), 'pets-lineup-v3.gif')
 
 os.makedirs(OUT, exist_ok=True)
 akita_states()

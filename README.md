@@ -6,7 +6,7 @@ TaskBeacon 是一个 local-first 的桌面任务状态监视器。它把来源�
 
 Codex 和 Claude Code 各有一只桌面宠物，宠物的动作实时反映对应工具的任务状态。内置 8 种狗和 6 种猫，右键宠物即可切换：
 
-<p align="center"><img src="docs/images/pets-lineup-v2.gif" alt="内置宠物：8 种狗和 6 种猫" width="100%"></p>
+<p align="center"><img src="docs/images/pets-lineup-v3.gif" alt="内置宠物：8 种狗和 6 种猫" width="100%"></p>
 
 以默认的秋田犬为例，不同任务状态下的动作：
 
