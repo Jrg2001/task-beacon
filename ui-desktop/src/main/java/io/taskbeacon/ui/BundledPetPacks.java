@@ -47,7 +47,9 @@ final class BundledPetPacks {
             new Pack("Dog-5-Saint-Bernard", "Saint Bernard", "\u5723\u4f2f\u7eb3", "dogs", "Saint-Bernard-Idle.png"),
             new Pack("Dog-6-Siberian-Husky", "Siberian Husky", "\u54c8\u58eb\u5947", "dogs", "Siberian-Husky-Idle.png"),
             // Id kept for saved preferences; artwork is the CC0 Husky set recoloured to match the pack style.
-            new Pack("Dog-7-Sprite", "Border Collie", "\u8fb9\u5883\u7267\u7f8a\u72ac", "dogs", "Border-Collie-Idle.png")
+            new Pack("Dog-7-Sprite", "Border Collie", "\u8fb9\u5883\u7267\u7f8a\u72ac", "dogs", "Border-Collie-Idle.png"),
+            // Generated from the CC0 Akita set by tools/pets/make_samoyed.py; a little larger, like the breed.
+            new Pack("Dog-8-Samoyed", "Samoyed", "\u8428\u6469\u8036", "dogs", "Samoyed-Idle.png", 1.2)
     );
     static final List<Pack> CATS = List.of(
             new Pack("Cat-1", "Orange", "\u6a58\u732b", "cats", "Cat-1-Idle.png"),

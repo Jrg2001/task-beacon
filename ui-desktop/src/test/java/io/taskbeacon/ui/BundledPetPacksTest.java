@@ -15,7 +15,7 @@ class BundledPetPacksTest {
     @TempDir Path skins;
 
     @Test void allDogAndCatBreedsAreBundledAndExtractable() throws Exception {
-        assertEquals(7, BundledPetPacks.DOGS.size());
+        assertEquals(8, BundledPetPacks.DOGS.size());
         assertEquals(6, BundledPetPacks.CATS.size());
         assertEquals("Akita", BundledPetPacks.find(BundledPetPacks.DEFAULT_ID).orElseThrow().label());
         assertEquals("Border Collie", BundledPetPacks.find("Dog-7-Sprite").orElseThrow().label());

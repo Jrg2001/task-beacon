@@ -58,7 +58,7 @@ def akita_states():
         save_gif(tiles, durations, f'akita-{state}.gif')
 
 # Mirrors BundledPetPacks.Pack#sizeFactor.
-PACK_SIZE_FACTORS = {'Dog-4-Schnauzer': 0.75}
+PACK_SIZE_FACTORS = {'Dog-4-Schnauzer': 0.75, 'Dog-8-Samoyed': 1.2}
 
 def app_size_factor(pack_dir):
     """Mirrors PetAnimationController.packPixelScale: sprites taller than the Akita's crop are shown smaller."""
@@ -82,7 +82,7 @@ def lineup():
     dogs = [('Dog-1-Golden-Retriever', 'Golden-Retriever-idle'), ('Dog-2-Akita', 'Akita-Idle'),
             ('Dog-3-Great-Dane', 'Weimaraner-idle'), ('Dog-4-Schnauzer', 'Schnauzer-Idle'),
             ('Dog-5-Saint-Bernard', 'Saint-Bernard-Idle'), ('Dog-6-Siberian-Husky', 'Siberian-Husky-Idle'),
-            ('Dog-7-Sprite', 'Border-Collie-Idle')]
+            ('Dog-7-Sprite', 'Border-Collie-Idle'), ('Dog-8-Samoyed', 'Samoyed-Idle')]
     cats = [(f'Cat-{i}', f'Cat-{i}-Idle') for i in range(1, 7)]
 
     def scaled(fs, factor):

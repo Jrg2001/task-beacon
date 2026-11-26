@@ -4,9 +4,9 @@ TaskBeacon 是一个 local-first 的桌面任务状态监视器。它把来源�
 
 ## 效果展示
 
-Codex 和 Claude Code 各有一只桌面宠物，宠物的动作实时反映对应工具的任务状态。内置 7 种狗和 6 种猫，右键宠物即可切换：
+Codex 和 Claude Code 各有一只桌面宠物，宠物的动作实时反映对应工具的任务状态。内置 8 种狗和 6 种猫，右键宠物即可切换：
 
-<p align="center"><img src="docs/images/pets-lineup.gif" alt="内置宠物：7 种狗和 6 种猫" width="100%"></p>
+<p align="center"><img src="docs/images/pets-lineup.gif" alt="内置宠物：8 种狗和 6 种猫" width="100%"></p>
 
 以默认的秋田犬为例，不同任务状态下的动作：
 
@@ -71,9 +71,9 @@ Linux/macOS：
 
 ## 内置宠物素材
 
-宠物模式中的 Codex 和 Claude Code 各有独立宠物；未选择其他图片时，两者默认使用 Dog-2-Akita。右键任一宠物可从“内置宠物”菜单中分别选择 7 种狗（含 Border Collie 和 Weimaraner）或 6 种猫，也可继续选择自定义图片。重置默认会恢复该宠物为 Akita；已有的自定义选择会保留，直到用户主动更换或重置。
+宠物模式中的 Codex 和 Claude Code 各有独立宠物；未选择其他图片时，两者默认使用 Dog-2-Akita。右键任一宠物可从“内置宠物”菜单中分别选择 8 种狗（含 Border Collie、Weimaraner 和 Samoyed）或 6 种猫，也可继续选择自定义图片。重置默认会恢复该宠物为 Akita；已有的自定义选择会保留，直到用户主动更换或重置。
 
-原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 基于同一 CC0 狗素材包中的 Siberian Husky 重新配色，并修改了耳尖、白色领圈和尾巴，因此画风、尺寸和动作与其他狗保持一致；生成脚本见 `tools/pets/make_border_collie.py`。Golden Retriever 由原素材的红棕色重新配色为浅金色，只替换毛色的 5 个深浅档位，脚本见 `tools/pets/recolor_golden_retriever.py`；Schnauzer 由原素材的蓝灰色重新配色为象牙白，脚本见 `tools/pets/recolor_schnauzer.py`；Weimaraner 由原素材的 Great Dane 重新配色而来（灰身棕斑统一为魏玛犬的银灰褐色），脚本见 `tools/pets/make_weimaraner.py`。Siamese（Cat-3）由原素材的冷灰色重新配色为深色海豹重点色暹罗猫，耳朵和头顶也逐帧改为深色，脚本见 `tools/pets/recolor_siamese.py`。Orange（Cat-1）由原素材的土黄色重新配色为 Akita 的橘棕色，脚本见 `tools/pets/recolor_orange_cat.py`。American Shorthair（Cat-6）由原素材的银色虎斑猫重新配色为亮银底黑条纹、白胸口的美国短毛猫，脚本见 `tools/pets/recolor_american_shorthair.py`。原猫素材趴下和睡觉的几帧没有画尾巴，看起来不像猫，所有猫在这几帧都补上了一条沿地面伸出、尾尖上翘的尾巴，脚本见 `tools/pets/add_lying_tails.py`。Ragdoll（Cat-5）由原素材的银色长毛猫重新配色为海豹双色布偶猫，尾巴尖也逐帧改为深色，脚本见 `tools/pets/recolor_ragdoll.py`。Tiger（Cat-4）由原素材的灰背米色猫重新配色为金黄色小老虎：深色斑块改为黑色，并按头部位置逐帧加上竖条纹；耳朵也逐帧调整（正面粉色耳内，侧面以毛色为主），脚本见 `tools/pets/make_tiger.py`。README 中的宠物展示动图由 `tools/readme/make_readme_media.py` 根据内置素材生成，素材更新后在仓库根目录重新运行即可。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
+原始 Pet Dogs Pack 和 Pet Cats Pack 的图片、预览图、特效图及各自的 `License.txt` 已一并收入 `ui-desktop/src/main/resources/pets/`，并随应用打包。两份原附许可证均标记为 CC0，并注明可用于商业及非商业项目。内置的 Border Collie 基于同一 CC0 狗素材包中的 Siberian Husky 重新配色，并修改了耳尖、白色领圈和尾巴，因此画风、尺寸和动作与其他狗保持一致；生成脚本见 `tools/pets/make_border_collie.py`。Golden Retriever 由原素材的红棕色重新配色为浅金色，只替换毛色的 5 个深浅档位，脚本见 `tools/pets/recolor_golden_retriever.py`；Schnauzer 由原素材的蓝灰色重新配色为象牙白，脚本见 `tools/pets/recolor_schnauzer.py`；Weimaraner 由原素材的 Great Dane 重新配色而来（灰身棕斑统一为魏玛犬的银灰褐色），脚本见 `tools/pets/make_weimaraner.py`。Samoyed 同样由 Akita 生成（两者都是立耳、卷尾的狐狸犬）：改为暖白色，逐帧重画卷在背上的大尾巴（坐下或趴下时改为贴地的短尾），加上脸颊和胸前的毛，并加高耳尖、耳内改为淡粉色，让耳朵在白色头部上仍能看清；默认大小为 1.2 倍。脚本见 `tools/pets/make_samoyed.py`。Siamese（Cat-3）由原素材的冷灰色重新配色为深色海豹重点色暹罗猫，耳朵和头顶也逐帧改为深色，脚本见 `tools/pets/recolor_siamese.py`。Orange（Cat-1）由原素材的土黄色重新配色为 Akita 的橘棕色，脚本见 `tools/pets/recolor_orange_cat.py`。American Shorthair（Cat-6）由原素材的银色虎斑猫重新配色为亮银底黑条纹、白胸口的美国短毛猫，脚本见 `tools/pets/recolor_american_shorthair.py`。原猫素材趴下和睡觉的几帧没有画尾巴，看起来不像猫，所有猫在这几帧都补上了一条沿地面伸出、尾尖上翘的尾巴，脚本见 `tools/pets/add_lying_tails.py`。Ragdoll（Cat-5）由原素材的银色长毛猫重新配色为海豹双色布偶猫，尾巴尖也逐帧改为深色，脚本见 `tools/pets/recolor_ragdoll.py`。Tiger（Cat-4）由原素材的灰背米色猫重新配色为金黄色小老虎：深色斑块改为黑色，并按头部位置逐帧加上竖条纹；耳朵也逐帧调整（正面粉色耳内，侧面以毛色为主），脚本见 `tools/pets/make_tiger.py`。README 中的宠物展示动图由 `tools/readme/make_readme_media.py` 根据内置素材生成，素材更新后在仓库根目录重新运行即可。程序运行时会将选中的品种提取到用户的 TaskBeacon 皮肤目录，因此不依赖下载目录。
 
 ## 当前限制
 
