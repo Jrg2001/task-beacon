@@ -43,6 +43,11 @@ class BundledPetPacksTest {
         assertNotNull(BundledPetPacks.class.getResource("/pets/dogs/Preview.png"));
     }
 
+    @Test void codexAndClaudeDefaultToDifferentPets() {
+        assertEquals("Border Collie", BundledPetPacks.defaultFor("codex").label());
+        assertEquals("Akita", BundledPetPacks.defaultFor("claude").label());
+    }
+
     @Test void everyPackHasAChineseMenuName() {
         for (BundledPetPacks.Pack pack : java.util.stream.Stream.concat(
                 BundledPetPacks.DOGS.stream(), BundledPetPacks.CATS.stream()).toList()) {

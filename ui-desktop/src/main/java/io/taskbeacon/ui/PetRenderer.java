@@ -90,7 +90,7 @@ public final class PetRenderer implements StatusRenderer {
         String customPath = preferences.get("pet." + pet.id + ".customImage", null);
         if (loadSavedCustomImage(pet, customPath)) return;
         if (pet == codexPet && loadSavedCustomImage(pet, preferences.get("pet.customImage", null))) return;
-        BundledPetPacks.find(BundledPetPacks.DEFAULT_ID).ifPresent(pack -> loadPack(pet, pack));
+        loadPack(pet, BundledPetPacks.defaultFor(pet.id));
     }
 
     private boolean loadSavedCustomImage(PetSlot pet, String path) {
@@ -264,10 +264,11 @@ public final class PetRenderer implements StatusRenderer {
         }
         sizeMenu.setDisable(!pet.controller.hasCustomImage());
 
-        MenuItem resetImageItem = new MenuItem("\u6062\u590d\u9ed8\u8ba4\u79cb\u7530\u72ac / Reset to Default Akita");
-        resetImageItem.setDisable(BundledPetPacks.DEFAULT_ID.equals(pet.packId));
-        resetImageItem.setOnAction(e -> BundledPetPacks.find(BundledPetPacks.DEFAULT_ID)
-                .ifPresent(pack -> selectPack(pet, pack)));
+        BundledPetPacks.Pack defaultPack = BundledPetPacks.defaultFor(pet.id);
+        MenuItem resetImageItem = new MenuItem("\u6062\u590d\u9ed8\u8ba4" + defaultPack.chineseLabel()
+                + " / Reset to Default " + defaultPack.label());
+        resetImageItem.setDisable(defaultPack.id().equals(pet.packId));
+        resetImageItem.setOnAction(e -> selectPack(pet, defaultPack));
 
         MenuItem panelItem = new MenuItem("\u4efb\u52a1\u603b\u89c8 / Tasks Overview");
         panelItem.setOnAction(e -> {

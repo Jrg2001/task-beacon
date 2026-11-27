@@ -17,7 +17,15 @@ import java.util.stream.Stream;
 
 /** Pet sprite packs bundled with TaskBeacon. The original CC0 licenses are included in resources. */
 final class BundledPetPacks {
+    /** Claude Code's default pet (orange, like Claude). */
     static final String DEFAULT_ID = "Dog-2-Akita";
+    /** Codex's default pet: black and white, so the two default pets are easy to tell apart. */
+    static final String CODEX_DEFAULT_ID = "Dog-7-Sprite";
+
+    /** The default pack for a pet slot ("codex" or "claude"). */
+    static Pack defaultFor(String petId) {
+        return find("codex".equals(petId) ? CODEX_DEFAULT_ID : DEFAULT_ID).orElseThrow();
+    }
 
     /**
      * {@code label} is the English name; the menu shows {@code chineseLabel} first. {@code sizeFactor} scales
