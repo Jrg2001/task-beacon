@@ -55,7 +55,8 @@ public final class DesktopController implements AutoCloseable {
         this.completedTtl = completedTtl;
         this.sourceHealth = sourceHealth;
         this.viewModels = new TaskViewModelFactory(clock);
-        String mode = preferences.get("ui.mode", "compact-card");
+        // Desktop pets by default; the compact card is one switch away and the choice is remembered.
+        String mode = preferences.get("ui.mode", "pet");
         this.currentRenderer = mode.equals("pet") ? petRenderer : cardRenderer;
     }
 

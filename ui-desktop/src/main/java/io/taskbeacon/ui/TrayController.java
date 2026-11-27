@@ -13,7 +13,7 @@ final class TrayController implements AutoCloseable {
     private MenuItem activeItem;
     private MenuItem attentionItem;
     private MenuItem switchModeItem;
-    private String currentMode = "compact-card";
+    private String currentMode = "pet";
 
     TrayController(Runnable toggle, Runnable settings, Runnable quit, Consumer<String> onSwitchMode) {
         this.toggle = toggle;

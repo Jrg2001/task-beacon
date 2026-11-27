@@ -71,7 +71,7 @@ Linux/macOS：
 
 ## 内置宠物素材
 
-Codex 和 Claude Code 的宠物可以分别设置：右键宠物，在“内置宠物”里选择 8 种狗或 6 种猫，也可以选择自定义图片。默认 Codex 是边境牧羊犬，Claude Code 是秋田犬。
+Codex 和 Claude Code 的宠物可以分别设置：右键宠物，在“内置宠物”里选择 8 种狗或 6 种猫，也可以选择自定义图片。默认 Codex 是边境牧羊犬，Claude Code 是秋田犬。首次启动显示桌面宠物；双击宠物或在右键菜单中可切换为紧凑卡片，选择会被记住。
 
 宠物素材来自 Pet Dogs Pack 和 Pet Cats Pack，均为 CC0 许可，可用于商业和非商业项目，原始许可证随素材放在 `ui-desktop/src/main/resources/pets/`。部分宠物在原素材基础上调整了配色或细节，或由同包中的其他品种改绘而来，生成脚本在 `tools/pets/`；README 中的展示动图由 `tools/readme/make_readme_media.py` 生成。
 

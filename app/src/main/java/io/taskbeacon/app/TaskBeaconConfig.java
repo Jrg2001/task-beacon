@@ -10,7 +10,7 @@ public record TaskBeaconConfig(Ui ui, Core core, Sources sources, Privacy privac
     public record Privacy(boolean showFullCommands, boolean persistEventPayloads, boolean persistPrompts) { }
 
     public static TaskBeaconConfig defaults() {
-        return new TaskBeaconConfig(new Ui(true, true, 8, "compact-card"),
+        return new TaskBeaconConfig(new Ui(true, true, 8, "pet"),
                 new Core(300, 30), new Sources(new Codex(true, "AUTO", "codex",
                 false, true, false, false), new Claude(true, true, false)),
                 new Privacy(false, false, false));
