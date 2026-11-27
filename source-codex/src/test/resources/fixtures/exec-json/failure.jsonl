@@ -1,2 +1,0 @@
-{"type":"thread.started","thread_id":"thread-fail"}
-{"type":"turn.failed","thread_id":"thread-fail","error":{"message":"redacted"}}

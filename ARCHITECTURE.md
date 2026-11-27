@@ -1,6 +1,6 @@
 # TaskBeacon Architecture
 
-实现基线：`taskbeacon-design-v0.2.md`。
+实现基线：[`docs/design/taskbeacon-design-v0.2.md`](docs/design/taskbeacon-design-v0.2.md)。
 
 ## 数据流
 
